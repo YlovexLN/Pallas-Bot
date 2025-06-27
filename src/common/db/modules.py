@@ -23,6 +23,7 @@ class BotConfigModule(Document):
     drunk: dict[int, float] = Field(default_factory=dict)
 
     class Settings:
+        name = "config"
         collection = "config"
         use_cache = True
         cache_expiration_time = timedelta(minutes=30)
@@ -36,6 +37,7 @@ class GroupConfigModule(Document):
     sing_progress: SingProgress | None = None
 
     class Settings:
+        name = "group_config"
         collection = "group_config"
         use_cache = True
         cache_expiration_time = timedelta(minutes=30)
@@ -47,6 +49,7 @@ class UserConfigModule(Document):
     banned: bool = False
 
     class Settings:
+        name = "user_config"
         collection = "user_config"
 
 
@@ -61,6 +64,7 @@ class Message(Document):
     time: int = Field(default_factory=lambda: int(time.time()))
 
     class Settings:
+        name = "message"
         collection = "message"
         indexes = [IndexModel([("time", pymongo.DESCENDING)], name="time_index")]
 
@@ -90,6 +94,7 @@ class Context(Document):
     clear_time: int = 0
 
     class Settings:
+        name = "context"
         collection = "context"
         indexes = [
             IndexModel([("keywords", pymongo.HASHED)], name="keywords_index"),
@@ -109,6 +114,7 @@ class BlackList(Document):
     answers_reserve: list[str] = Field(default_factory=list)
 
     class Settings:
+        name = "blacklist"
         collection = "blacklist"
         indexes = [IndexModel([("group_id", pymongo.HASHED)], name="group_index")]
 
@@ -130,7 +136,8 @@ class ImageCache(BaseImageCache):
     base64_data: str | None = None
     ref_times: int = 1
 
-    class Settings:
+    class Settings(BaseImageCache.Settings):
+        name = "image_cache"
         collection = "image_cache"
         indexes = [IndexModel([("cq_code", pymongo.HASHED)], name="cq_code_index")]
 
