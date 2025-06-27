@@ -1,5 +1,8 @@
 {
     "ruff.nativeServer": "on",
+    "ruff.configuration": "${workspaceFolder}/ruff.toml",
+    "ruff.importStrategy": "fromEnvironment",
+    "ruff.format.preview": true,
     "[python]": {
         "editor.codeActionsOnSave": {
             "source.fixAll.ruff": "explicit",
