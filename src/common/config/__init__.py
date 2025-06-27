@@ -144,7 +144,7 @@ class BotConfig(Config):
         if value > 0:
             return False
         for on_sober_up in self._sober_up_handlers:
-            on_sober_up(self.bot_id, self.group_id, value)
+            await on_sober_up(self.bot_id, self.group_id, value)
         return True
 
     async def drunkenness(self) -> int:

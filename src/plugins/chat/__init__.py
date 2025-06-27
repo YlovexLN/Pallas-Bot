@@ -16,16 +16,19 @@ plugin_config = get_plugin_config(Config)
 SERVER_URL = f"http://{plugin_config.ai_server_host}:{plugin_config.ai_server_port}"
 CHAT_COOLDOWN_KEY = "chat"
 
+if plugin_config.chat_enable:
 
-@BotConfig.handle_sober_up
-async def on_sober_up(bot_id, group_id, drunkenness) -> None:
-    session = f"{bot_id}_{group_id}"
-    logger.info(f"bot [{bot_id}] sober up in group [{group_id}], clear session [{session}]")
-    url = f"{SERVER_URL}{plugin_config.del_session_endpoint}/{session}"
-    await HTTPXClient.delete(url)
+    @BotConfig.handle_sober_up
+    async def on_sober_up(bot_id, group_id, drunkenness) -> None:
+        session = f"{bot_id}_{group_id}"
+        logger.info(f"bot [{bot_id}] sober up in group [{group_id}], clear session [{session}]")
+        url = f"{SERVER_URL}{plugin_config.del_session_endpoint}/{session}"
+        await HTTPXClient.delete(url)
 
 
 async def is_to_chat(event: GroupMessageEvent) -> bool:
+    if plugin_config.chat_enable is False:
+        return False
     text = event.get_plaintext()
     if not text.startswith("牛牛") and not event.is_tome():
         return False
