@@ -1,33 +1,26 @@
-FROM python:3.9 as requirements-stage
-
-WORKDIR /tmp
-
-COPY ./pyproject.toml ./poetry.lock* /tmp/
-
-RUN curl -sSL https://install.python-poetry.org -o install-poetry.py
-
-RUN python install-poetry.py --yes
-
-ENV PATH="${PATH}:/root/.local/bin"
-
-RUN poetry export -f requirements.txt --output requirements.txt --without-hashes
-
-FROM tiangolo/uvicorn-gunicorn-fastapi:python3.9
+# syntax=docker/dockerfile:1
+FROM --platform=$BUILDPLATFORM python:3.12-slim
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y ffmpeg
+# 合并安装依赖，清理缓存，减少镜像层数
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends ffmpeg build-essential && \
+    pip install --upgrade pip && \
+    pip install uv && \
+    rm -rf /var/lib/apt/lists/*
 
-ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.9.0/wait /app/wait
+COPY pyproject.toml ./
+
+RUN uv pip install --system ".[perf]" --no-cache-dir && \
+    apt-get purge -y build-essential && \
+    apt-get autoremove -y && \
+    rm -rf /root/.cache/pip
+
+ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.12.1/wait /app/wait
 
 RUN chmod +x /app/wait
 
-RUN echo "./wait" >> /app/prestart.sh
+COPY . .
 
-COPY --from=requirements-stage /tmp/requirements.txt /app/requirements.txt
-
-RUN pip install --no-cache-dir --upgrade -r requirements.txt
-
-RUN rm requirements.txt
-
-COPY ./ /app/
+CMD ["sh", "-c", "./wait && nb run"]
