@@ -1,5 +1,6 @@
 import asyncio
 import random
+from datetime import datetime, timedelta
 
 from nonebot import get_bot, logger, on_message, require
 from nonebot.adapters.onebot.v11 import GroupMessageEvent, permission
@@ -24,8 +25,7 @@ drink_msg = on_message(
 )
 
 
-async def sober_up_later(bot_id: int, group_id: int, drunk_duration: int):
-    await asyncio.sleep(drunk_duration)
+async def sober_up_later(bot_id: int, group_id: int):
     config = BotConfig(bot_id, group_id)
     if await config.sober_up() and not await config.is_sleep():
         logger.info(f"bot [{bot_id}] sober up in group [{group_id}]")
@@ -59,7 +59,7 @@ async def _(event: GroupMessageEvent):
         logger.info(
             f"bot [{event.self_id}] go to sleep in group [{event.group_id}], wake up after {sleep_duration} sec"
         )
-        await config.sleep(sleep_duration)
+        await config.sleep(int(sleep_duration))
 
     try:
         if go_to_sleep:
@@ -70,11 +70,13 @@ async def _(event: GroupMessageEvent):
             await drink_msg.send("呀，博士。你今天走起路来，怎么看着摇摇晃晃的？")
     except ActionFailed:
         pass
+
+    sober_up_date = datetime.now() + timedelta(seconds=drunk_duration)
     scheduler.add_job(
         sober_up_later,
         "date",
-        run_date=asyncio.get_event_loop().time() + drunk_duration,
-        args=(event.self_id, event.group_id, drunk_duration),
+        run_date=sober_up_date,
+        args=(event.self_id, event.group_id),
     )
 
 
