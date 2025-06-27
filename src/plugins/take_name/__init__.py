@@ -23,12 +23,12 @@ async def change_name():
         if random.random() > 0.002:  # 期望约每8个多小时改一次
             continue
 
-        bot_id = target_msg["bot_id"]
+        bot_id = target_msg.bot_id
         config = BotConfig(bot_id, group_id)
         if await config.is_sleep():
             continue
 
-        target_user_id = target_msg["user_id"]
+        target_user_id = target_msg.user_id
         logger.info(f"bot [{bot_id}] ready to change name by using [{target_user_id}] in group [{group_id}]")
 
         bot = get_bot(str(bot_id))
@@ -124,7 +124,7 @@ async def watch_name_handle(bot: Bot, event: NoticeEvent):
         return
     card = info["card"] or info["nickname"]
     logger.info(f"bot [{bot.self_id}] watch name change by [{user_id}] in group [{group_id}]")
-    config = BotConfig(bot.self_id, group_id)
+    config = BotConfig(int(bot.self_id), group_id)
 
     try:
         await bot.call_api(
