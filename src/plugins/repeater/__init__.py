@@ -126,7 +126,7 @@ async def _(bot: Bot, event: GroupMessageEvent):
 
     await config.refresh_cooldown("repeat")
     delay = random.randint(2, 5)
-    for item in answers:
+    async for item in answers:
         msg = await post_proc(item, event.self_id, event.group_id)
         logger.info(f"bot [{event.self_id}] ready to send [{str(msg)[:30]}] to group [{event.group_id}]")
 
