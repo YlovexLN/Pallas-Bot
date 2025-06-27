@@ -1,7 +1,7 @@
 import asyncio
 import random
 
-from nonebot import logger, on_message, require
+from nonebot import get_bot, logger, on_message, require
 from nonebot.adapters.onebot.v11 import GroupMessageEvent, permission
 from nonebot.exception import ActionFailed
 from nonebot.rule import Rule
@@ -19,6 +19,20 @@ drink_msg = on_message(
     block=True,
     permission=permission.GROUP,
 )
+
+
+async def sober_up_later(bot_id: int, group_id: int, drunk_duration: int):
+    await asyncio.sleep(drunk_duration)
+    config = BotConfig(bot_id, group_id)
+    if await config.sober_up() and not await config.is_sleep():
+        logger.info(f"bot [{bot_id}] sober up in group [{group_id}]")
+        await get_bot(str(bot_id)).call_api(
+            "send_group_msg",
+            **{
+                "message": "呃......咳嗯，下次不能喝、喝这么多了......",
+                "group_id": group_id,
+            },
+        )
 
 
 @drink_msg.handle()
@@ -54,10 +68,7 @@ async def _(event: GroupMessageEvent):
     except ActionFailed:
         pass
 
-    await asyncio.sleep(drunk_duration)
-    if await config.sober_up() and not await config.is_sleep():
-        logger.info(f"bot [{event.self_id}] sober up in group [{event.group_id}]")
-        await drink_msg.finish("呃......咳嗯，下次不能喝、喝这么多了......")
+    asyncio.create_task(sober_up_later(event.self_id, event.group_id, drunk_duration))
 
 
 update_sched = require("nonebot_plugin_apscheduler").scheduler
