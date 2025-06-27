@@ -33,7 +33,8 @@
     ...
     volumes:
     # 根据需求修改冒号左边路径
-    # Windows用户请修改左边为 D:\Pallas-Bot 这样的路径
+    # Windows 用户请修改冒号左边为 D:\Pallas-Bot 这样的路径
+    # 建议与 docker-compose.yml 在同一目录下
         - /opt/dockerstore/pallas-bot/resource/:/app/resource
         - /opt/dockerstore/pallas-bot/accounts/:/app/accounts
         - /opt/dockerstore/pallas-bot/.env.prod:/app/.env.prod
@@ -51,7 +52,7 @@
 
 2. 默认提供的 `docker-compose.yml` 中包含了 `NapCat` 作为 QQ 客户端，你可以根据需要将其替换为 [Lagrange](https://github.com/LagrangeDev/Lagrange.Core/blob/master/Docker_zh.md) 或其他支持 docker 部署的客户端，如果你想手动部署可将 `NapCat` service 删除。
 
-3. 在 docker-compose.yml 所在目录下复制一份 [.env.prod](../.env.prod) 文件，并根据需要填写相关参数。具体请参考 [.env.prod](../.env.prod) 文件中的注释。注意，使用 docker compose 部署时，请将 `MONGO_HOST` 设置为 `mongodb` 容器的 `service` 名称，如：`MONGO_HOST=mongodb`。
+3. 在你映射的目录下复制一份 [.env.prod](../.env.prod) 文件，并根据需要填写相关参数。具体请参考 [.env.prod](../.env.prod) 文件中的注释。注意，使用 docker compose 部署时，请将 `MONGO_HOST` 设置为 `mongodb` 容器的 `service` 名称，如：`MONGO_HOST=mongodb`。
 
 ## 启动与登录牛牛
 
@@ -73,7 +74,7 @@ docker compose up -d
 
 ### 查看日志
 
-通过 `docker compose logs -f` 查看实时日志，启动完成后就可以访问 `NapCat` 后台并登陆账号了。
+在 `docker-compose.yml` 的目录下通过 `docker compose logs -f` 查看实时日志，启动完成后就可以访问 `NapCat` 后台并登陆账号了。
 
 ### 登录账号
 
