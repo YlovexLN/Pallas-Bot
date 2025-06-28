@@ -36,7 +36,6 @@
     # Windows 用户请修改冒号左边为 D:\Pallas-Bot 这样的路径
     # 建议与 docker-compose.yml 在同一目录下
         - /opt/dockerstore/pallas-bot/resource/:/app/resource
-        - /opt/dockerstore/pallas-bot/accounts/:/app/accounts
         - /opt/dockerstore/pallas-bot/.env.prod:/app/.env.prod
     ...
     volumes:
@@ -72,15 +71,15 @@ NAPCAT_UID=$(id -u) NAPCAT_GID=$(id -g) docker compose up -d
 docker compose up -d
 ```
 
-### 查看日志
-
-在 `docker-compose.yml` 的目录下通过 `docker compose logs -f` 查看实时日志，启动完成后就可以访问 `NapCat` 后台并登陆账号了。
-
 ### 登录账号
 
 浏览器访问 `http://<宿主机ip>:6099/webui`，默认 token 为 `napcat`。
 
 扫码登录后，点击 `网络配置` -> `新建` -> `Websocket客户端`，打开 `启用` 开关，填入任意自定义名称，在 `URL` 栏填写 `ws://pallasbot:8088/onebot/v11/ws`，点击保存即可连接到 `Pallas-Bot`。
+
+### 查看日志
+
+在 `docker-compose.yml` 的目录下通过 `docker compose logs -f` 查看实时日志，启动完成后就可以访问 `NapCat` 后台并登陆账号了。
 
 ## 后续更新
 

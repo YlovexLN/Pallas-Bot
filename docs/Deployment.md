@@ -25,14 +25,16 @@
 
     如果你本地已有 Python 环境可以忽略本条，下方的 `uv` 会自动安装牛牛支持的 Python 版本。
 
-4. 下载安装 [pipx](https://pypa.github.io/pipx/installation/)，用于安装 Python 应用（可执行文件）
+4. 下载安装 [pipx](https://pypa.github.io/pipx/installation/)，用于安装 Python 应用（可执行文件）：
 
     ```bash
     python -m pip install --user pipx
     python -m pipx ensurepath
     ```
 
-5. 使用 `pipx` 安装 [uv](https://docs.astral.sh/uv/getting-started/installation/), 这是一个现代且高效的 Python 包和项目管理工具
+    为确保 `pipx` 路径生效，请关闭并重新打开 Powershell 窗口。
+
+5. 使用 `pipx` 安装 [uv](https://docs.astral.sh/uv/getting-started/installation/), 这是一个现代且高效的 Python 包和项目管理工具：
 
     ```bash
     pipx install uv
@@ -54,14 +56,14 @@
     - [Windows 平台安装 MongoDB](https://www.runoob.com/mongodb/mongodb-window-install.html)
     - [Linux 平台安装 MongoDB](https://www.runoob.com/mongodb/mongodb-linux-install.html)
 
-    只需要确认 Mongodb 启动即可，后面的部分会由 Pallas-Bot 自动完成
+    只需要确认 Mongodb 启动即可，后面的部分会由 Pallas-Bot 自动完成。
 
 3. 配置 FFmpeg （如果不希望牛牛发送语音，可以跳过这一步）
 
     - [安装 FFmpeg](https://docs.go-cqhttp.org/guide/quick_start.html#%E5%AE%89%E8%A3%85-ffmpeg)
-    - 下载 [牛牛语音文件](https://huggingface.co/pallasbot/Pallas-Bot/blob/main/voices.zip)，解压放到 `resource/` 文件夹下，参考 [path_structure.txt](../resource/voices/path_structure.txt)
+    - 下载 [牛牛语音文件](https://huggingface.co/pallasbot/Pallas-Bot/blob/main/voices.zip)，解压放到 `resource/` 文件夹下，目录结构参考 [path_structure.txt](../resource/voices/path_structure.txt)
 
-4. 使用 `jieba-fast` 分词库
+4. （可选）使用 `jieba-fast` 分词库
 
     项目默认安装 `jieba`， 加群较多、需要处理消息量大的用户可以自行安装 `jieba-fast`，以提升分词速度（若群较少也可跳过这一步）  
 
@@ -70,16 +72,19 @@
     ```
 
     若安装失败，在 Windows 上可能需要额外安装 `Visual Studio`，Linux 上需要 `build-essential`  
-    注：项目将优先尝试导入 `jieba-fast` 库，如果导入失败则使用 `jieba` 库，无需手动修改代码
+    注：项目将优先尝试导入 `jieba-fast` 库，如果导入失败则使用 `jieba` 库，无需手动修改代码。
 
 5. 安装并配置 NapCat
 
-    若使用 `NapCat` 作为 QQ 客户端，可支持戳一戳功能。具体部署方法参照 [NapCat](https://napneko.github.io/) 官方步骤。
-    在 NapCat 配置文件中使用反向 WebSocket (NapCat作为WebSocket客户端角色) 连接牛牛
+    若使用 `NapCat` 作为 QQ 客户端，可支持戳一戳功能。具体部署方法参照 [NapCat](https://napneko.github.io/) 官方步骤。Windows 用户推荐使用 [NapCat.Win.一键版本](https://napneko.github.io/guide/boot/Shell#napcat-win-%E4%B8%80%E9%94%AE%E7%89%88%E6%9C%AC)。
 
-    ```bash
-    ws://localhost:8088/onebot/v11/ws
-    ```
+    运行 `NapCat` 后，使用浏览器访问 `http://localhost:6099/webui`，登录页默认 token 为 `napcat`。
+
+    扫码登录后，点击 `网络配置` -> `新建` -> `Websocket客户端`，打开 `启用` 开关，填入任意自定义名称，在 `URL` 栏填写 `ws://localhost:8088/onebot/v11/ws`，点击保存即可连接到 `Pallas-Bot`。
+
+    如果需要，上面两个 localhost 可以替换为你的电脑/服务器 IP 地址。
+
+6. 牛牛同样支持其他实现的 QQ 客户端，如 [Lagrange.OneBot](https://lagrangedev.github.io/Lagrange.Doc/v1/Lagrange.OneBot/) ，[AstralGocq](https://github.com/ProtocolScience/AstralGocq) 等。`Websocket URL` 同上。
 
 ## 启动 Pallas-Bot
 
@@ -89,11 +94,12 @@ uv run nb run        # 运行
 ```
 
 **注意！请不要关闭这个命令行窗口！这会导致 Pallas-Bot 停止运行！**
-Linux 用户推荐使用 [termux](https://termux.dev/) 或 [GNU Screen](https://zhuanlan.zhihu.com/p/405968623) 来保持 Pallas-Bot 在后台运行。
+**同样请不要关闭 NapCat 的命令行窗口！**
+Linux 用户推荐使用 [termux](https://termux.dev/) 或 [GNU Screen](https://zhuanlan.zhihu.com/p/405968623) 来保持 Pallas-Bot 和你的 QQ 客户端在后台运行，或者考虑使用 [Docker 部署](DockerDeployment.md)。
 
 ## 后续更新
 
-如果牛牛出了新功能你想要使用，同样在项目目录下打开 Powershell，执行命令后重新运行牛牛即可
+如果牛牛出了新功能或修复了 bug，同样在项目目录下打开 Powershell，执行以下命令后重新运行牛牛即可：
 
 ```bash
 git pull origin master --autostash
