@@ -174,7 +174,7 @@ class BotConfig(Config):
         """
         await self._update_in_memory(f"sleep{KEY_JOINER}{self.group_id}", time.time() + seconds)
 
-    async def taken_name(self) -> int:
+    async def taken_name(self) -> int | None:
         """
         返回在该群夺舍的账号
         """
@@ -187,6 +187,8 @@ class BotConfig(Config):
         更新夺舍的账号
         """
         user_ids = await self._find("taken_name")
+        if user_ids is None:
+            user_ids = {}
         user_ids[self.group_id] = user_id
         await self._update("taken_name", user_ids)
 

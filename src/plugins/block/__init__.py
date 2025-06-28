@@ -1,4 +1,4 @@
-from nonebot import get_driver, get_plugin_config, on_message, on_notice
+from nonebot import get_driver, get_plugin_config, logger, on_message, on_notice
 from nonebot.adapters import Bot
 from nonebot.adapters.onebot.v11 import GroupIncreaseNoticeEvent, GroupMessageEvent, PokeNotifyEvent, permission
 from nonebot.rule import Rule
@@ -14,6 +14,7 @@ driver = get_driver()
 @driver.on_bot_connect
 async def bot_connect(bot: Bot) -> None:
     if bot.self_id.isnumeric() and bot.type == "OneBot V11":
+        logger.info(f"Bot {bot.self_id} connected.")
         plugin_config.bots.add(int(bot.self_id))
 
 
@@ -24,6 +25,8 @@ async def bot_disconnect(bot: Bot) -> None:
             plugin_config.bots.remove(int(bot.self_id))
         except ValueError:
             pass
+        else:
+            logger.info(f"Bot {bot.self_id} disconnected.")
 
 
 async def is_other_bot(event: GroupMessageEvent) -> bool:
