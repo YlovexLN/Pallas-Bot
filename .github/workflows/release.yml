@@ -42,7 +42,7 @@ jobs:
             echo "changelog<<EOF" >> $GITHUB_OUTPUT
             
             # 按类型分组显示提交
-            echo "### 🆕 新功能" >> $GITHUB_OUTPUT
+            echo "### 🚀 新功能" >> $GITHUB_OUTPUT
             git log --pretty=format:"* %s ([%h](https://github.com/${{ github.repository }}/commit/%H))" $PREVIOUS_TAG..HEAD --grep="^feat" >> $GITHUB_OUTPUT || echo "无" >> $GITHUB_OUTPUT
             echo "" >> $GITHUB_OUTPUT
             
