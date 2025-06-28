@@ -1,9 +1,8 @@
 name: Health Check
 
 on:
-  schedule:
-    # 每周一上午 8:00 UTC 检查一次
-    - cron: '0 8 * * 1'
+  release:
+    types: [published]
   workflow_dispatch:
 
 jobs:
