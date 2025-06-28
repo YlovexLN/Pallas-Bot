@@ -71,6 +71,8 @@ NAPCAT_UID=$(id -u) NAPCAT_GID=$(id -g) docker compose up -d
 docker compose up -d
 ```
 
+和手动部署一样，牛牛也会自动下载语音文件到你映射的 `resource/voices/` 目录下。
+
 ### 登录账号
 
 浏览器访问 `http://<宿主机ip>:6099/webui`，默认 token 为 `napcat`。

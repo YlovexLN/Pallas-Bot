@@ -51,19 +51,7 @@
     uv sync
     ```
 
-2. 安装并启动 Mongodb （这是启动核心功能所必须的）
-
-    - [Windows 平台安装 MongoDB](https://www.runoob.com/mongodb/mongodb-window-install.html)
-    - [Linux 平台安装 MongoDB](https://www.runoob.com/mongodb/mongodb-linux-install.html)
-
-    只需要确认 Mongodb 启动即可，后面的部分会由 Pallas-Bot 自动完成。
-
-3. 配置 FFmpeg （如果不希望牛牛发送语音，可以跳过这一步）
-
-    - [安装 FFmpeg](https://docs.go-cqhttp.org/guide/quick_start.html#%E5%AE%89%E8%A3%85-ffmpeg)
-    - 下载 [牛牛语音文件](https://huggingface.co/pallasbot/Pallas-Bot/blob/main/voices.zip)，解压放到 `resource/` 文件夹下，目录结构参考 [path_structure.txt](../resource/voices/path_structure.txt)
-
-4. （可选）使用 `jieba-fast` 分词库
+2. （可选）使用 `jieba-fast` 分词库
 
     项目默认安装 `jieba`， 加群较多、需要处理消息量大的用户可以自行安装 `jieba-fast`，以提升分词速度（若群较少也可跳过这一步）  
 
@@ -74,13 +62,30 @@
     若安装失败，在 Windows 上可能需要额外安装 `Visual Studio`，Linux 上需要 `build-essential`  
     注：项目将优先尝试导入 `jieba-fast` 库，如果导入失败则使用 `jieba` 库，无需手动修改代码。
 
+3. 安装并启动 Mongodb （这是启动核心功能所必须的）
+
+    - [Windows 平台安装 MongoDB](https://www.runoob.com/mongodb/mongodb-window-install.html)
+    - [Linux 平台安装 MongoDB](https://www.runoob.com/mongodb/mongodb-linux-install.html)
+
+    只需要确认 Mongodb 启动即可，后面的部分会由 Pallas-Bot 自动完成。
+
+4. 配置语音功能
+
+    - 配置 FFmpeg：[安装 FFmpeg](https://napneko.github.io/config/advanced#%E5%AE%89%E8%A3%85-ffmpeg)
+
+    Pallas-Bot 会在启动时自动检查并下载语音文件。
+
+    手动下载（仅在自动下载失败时需要）：
+
+    - 下载 [牛牛语音文件](https://huggingface.co/pallasbot/Pallas-Bot/blob/main/voices/Pallas.zip)，解压放到 `resource/voices/` 文件夹下，目录结构参考 [path_structure.txt](../resource/voices/path_structure.txt)
+
 5. 安装并配置 NapCat
 
     若使用 `NapCat` 作为 QQ 客户端，可支持戳一戳功能。具体部署方法参照 [NapCat](https://napneko.github.io/) 官方步骤。Windows 用户推荐使用 [NapCat.Win.一键版本](https://napneko.github.io/guide/boot/Shell#napcat-win-%E4%B8%80%E9%94%AE%E7%89%88%E6%9C%AC)。
 
     运行 `NapCat` 后，使用浏览器访问 `http://localhost:6099/webui`，登录页默认 token 为 `napcat`。
 
-    扫码登录后，点击 `网络配置` -> `新建` -> `Websocket客户端`，打开 `启用` 开关，填入任意自定义名称，在 `URL` 栏填写 `ws://localhost:8088/onebot/v11/ws`，点击保存即可连接到 `Pallas-Bot`。
+    扫码登录后，点击 `网络配置` -> `新建` -> `Websocket客户端`，打开 `启用` 开关，填入任意自定义名称，在 `URL` 栏填写 `ws://localhost:8088/onebot/v11/ws`，点击保存即可连接到 `Pallas-Bot`。`NapCat` 的 `WebUI` 配置方法可参考 [NapCat 基础配置](https://napneko.github.io/config/basic)。
 
     如果需要，上面两个 localhost 可以替换为你的电脑/服务器 IP 地址。
 
