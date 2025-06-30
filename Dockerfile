@@ -17,10 +17,6 @@ RUN uv pip install --system ".[perf]" --no-cache-dir && \
     apt-get autoremove -y && \
     rm -rf /root/.cache/pip
 
-ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.12.1/wait /app/wait
-
-RUN chmod +x /app/wait
-
 COPY . .
 
-CMD ["sh", "-c", "./wait && nb run"]
+CMD ["nb", "run"]

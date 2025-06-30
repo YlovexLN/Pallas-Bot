@@ -1,26 +1,23 @@
 services:
   pallasbot:
     container_name: pallasbot
-    image: pallasbot/pallas-bot
+    image: pallasbot/pallas-bot:latest
     restart: always
     ports:
       - 8088:8088
-    env_file:
-      - ".env.prod"
     environment:
       TZ: Asia/Shanghai
       ENVIRONMENT: prod
       APP_MODULE: bot:app
       MAX_WORKERS: 1
-      WAIT_HOSTS: mongodb:27017
-      TIMEOUT: 480
     networks:
       - pallasbot
     volumes:
-      - /opt/dockerstore/pallas-bot/resource/:/app/resource
-      - /opt/dockerstore/pallas-bot/.env.prod:/app/.env.prod
+      - ./pallas-bot/resource/:/app/resource
+      - ./pallas-bot/.env:/app/.env
     depends_on:
-      - mongodb
+      mongodb:
+        condition: service_healthy
 
   mongodb:
     container_name: mongodb
@@ -34,8 +31,14 @@ services:
     networks:
       - pallasbot
     volumes:
-      - /opt/dockerstore/mongo/data:/data/db
-      - /opt/dockerstore/mongo/logs:/var/log/mongodb
+      - ./mongo/data:/data/db
+      - ./mongo/logs:/var/log/mongodb
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
 
   napcat:
     container_name: napcat
@@ -48,8 +51,8 @@ services:
     ports:
         - 6099:6099
     volumes:
-      - /opt/dockerstore/NapCat/QQ:/app/.config/QQ
-      - /opt/dockerstore/NapCat/config:/app/napcat/config
+      - ./NapCat/QQ:/app/.config/QQ
+      - ./NapCat/config:/app/napcat/config
 
 networks:
   pallasbot:

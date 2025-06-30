@@ -32,26 +32,26 @@
     ```yml
     ...
     volumes:
-    # 根据需求修改冒号左边路径
-    # Windows 用户请修改冒号左边为 D:\Pallas-Bot 这样的路径
+    # 根据需求修改冒号左边路径，推荐保持默认，即在当前目录下自动创建映射目录
+    # Windows 用户如需使用绝对路径，请修改冒号左边为 D:\Pallas-Bot 这样的路径
     # 建议与 docker-compose.yml 在同一目录下
-        - /opt/dockerstore/pallas-bot/resource/:/app/resource
-        - /opt/dockerstore/pallas-bot/.env.prod:/app/.env.prod
+        - ./pallas-bot/resource/:/app/resource
+        - ./pallas-bot/.env:/app/.env
     ...
     volumes:
     # mongodb 数据与日志存储路径，修改方法同上
-      - /opt/dockerstore/mongo/data:/data/db
-      - /opt/dockerstore/mongo/logs:/var/log/mongodb
+      - ./mongo/data:/data/db
+      - ./mongo/logs:/var/log/mongodb
     ...
     # NapCat 数据与配置存储路径，修改方法同上
     volumes:
-      - /opt/dockerstore/NapCat/QQ:/app/.config/QQ
-      - /opt/dockerstore/NapCat/config:/app/napcat/config
+      - ./NapCat/QQ:/app/.config/QQ
+      - ./NapCat/config:/app/napcat/config
     ```
 
 2. 默认提供的 `docker-compose.yml` 中包含了 `NapCat` 作为 QQ 客户端，你可以根据需要将其替换为 [Lagrange](https://github.com/LagrangeDev/Lagrange.Core/blob/master/Docker_zh.md) 或其他支持 docker 部署的客户端，如果你想手动部署可将 `NapCat` service 删除。
 
-3. 在你映射的目录下复制一份 [.env](../.env) 文件，并根据需要填写相关参数。具体请参考 [.env](../.env) 文件中的注释。
+3. （可选）如有需要，在你映射的目录下复制一份 [.env](../.env) 文件，并根据需要填写相关参数。具体请参考 [.env](../.env) 文件中的注释。
 
 ## 启动与登录牛牛
 
