@@ -28,6 +28,8 @@ WHAT_SONG_COOLDOWN_KEY = "song_title"
 
 
 async def is_to_sing(event: GroupMessageEvent, state: T_State) -> bool:
+    if not plugin_config.sing_enable:
+        return False
     text = event.get_plaintext()
     if not text:
         return False
@@ -77,9 +79,9 @@ async def is_to_sing(event: GroupMessageEvent, state: T_State) -> bool:
         if not progress:
             return False
 
-        song_id = progress["song_id"]
-        chunk_index = progress["chunk_index"]
-        key_val = progress["key"]
+        song_id = str(progress.song_id)
+        chunk_index = progress.chunk_index + 1
+        key_val = progress.key
         if not song_id or chunk_index > 100:
             return False
         state["song_id"] = song_id
