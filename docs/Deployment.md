@@ -89,7 +89,11 @@
 
     如果需要，上面两个 localhost 可以替换为你的电脑/服务器 IP 地址。
 
-6. 牛牛同样支持其他实现的 QQ 客户端，如 [Lagrange.OneBot](https://lagrangedev.github.io/Lagrange.Doc/v1/Lagrange.OneBot/) ，[AstralGocq](https://github.com/ProtocolScience/AstralGocq) 等。`Websocket URL` 同上。
+    牛牛同样支持其他实现的 QQ 客户端，如 [Lagrange.OneBot](https://lagrangedev.github.io/Lagrange.Doc/v1/Lagrange.OneBot/) ，[AstralGocq](https://github.com/ProtocolScience/AstralGocq) 等。`Websocket URL` 同上。
+
+6. （可选）配置 `.env` 文件
+
+    结合注释，根据需要修改 `.env` 文件中的配置。
 
 ## 启动 Pallas-Bot
 
