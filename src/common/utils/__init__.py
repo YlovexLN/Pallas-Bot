@@ -37,7 +37,6 @@ class HTTPXClient:
             httpx.RemoteProtocolError,
             httpx.NetworkError,
         )),
-        "before_sleep": before_sleep_log(logger, logging.DEBUG),
     }
 
     @classmethod
@@ -53,6 +52,7 @@ class HTTPXClient:
             except httpx.TransportError as e:
                 logger.error(f"httpx client transport error: {e}")
                 await cls.close()
+                cls._client = None
                 raise
             except httpx.HTTPError as e:
                 logger.warning(f"httpx client HTTP error: {e}")
