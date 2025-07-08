@@ -15,6 +15,7 @@ from src.common.config import BotConfig
 from src.common.utils.array2cqcode import try_convert_to_cqcode
 from src.common.utils.media_cache import get_image, insert_image
 
+from .emoji_reaction import reaction_msg
 from .model import Chat
 
 message_id_lock = asyncio.Lock()

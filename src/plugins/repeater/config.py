@@ -34,3 +34,7 @@ class Config(BaseModel, extra="ignore"):
     save_count_threshold: int = 1000
     # 保存时，给内存中保留的大小
     save_reserved_size: int = 100
+    # 是否启用表情回复
+    enable_reaction: bool = True
+    # 表情回复概率
+    reaction_probability: float = 0.05
