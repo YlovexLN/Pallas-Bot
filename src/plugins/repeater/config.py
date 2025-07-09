@@ -34,7 +34,15 @@ class Config(BaseModel, extra="ignore"):
     save_count_threshold: int = 1000
     # 保存时，给内存中保留的大小
     save_reserved_size: int = 100
-    # 是否启用表情回复
+    # 启用表情回应功能
     enable_reaction: bool = True
-    # 表情回复概率
-    reaction_probability: float = 0.05
+    # 启用日常消息一定概率触发表情回应
+    enable_probability_reaction: bool = True
+    # 触发表情回应的概率
+    reaction_probability: float = 0.1
+    # 当收到含表情的消息时，自动回应
+    enable_face_reaction: bool = False
+    # 有人用表情回应任意消息时，牛牛跟着回应
+    enable_auto_reply_on_reaction: bool = True
+    # 是否回应相同的表情
+    reply_with_same_emoji: bool = True
