@@ -100,10 +100,10 @@
 
 ### 开源库
 
-[nonebot2](https://github.com/nonebot/nonebot2): 跨平台 Python 异步聊天机器人框架
-[jieba_fast](https://github.com/deepcs233/jieba_fast): 高效的中文分词库
-[beanie](https://github.com/BeanieODM/beanie): Asynchronous Python ODM for MongoDB
-[NapCat](https://github.com/NapNeko/NapCatQQ): 现代化的基于 NTQQ 的 Bot 协议端实现
+[nonebot2](https://github.com/nonebot/nonebot2): 跨平台 Python 异步聊天机器人框架  
+[jieba_fast](https://github.com/deepcs233/jieba_fast): 高效的中文分词库  
+[beanie](https://github.com/BeanieODM/beanie): Asynchronous Python ODM for MongoDB  
+[NapCat](https://github.com/NapNeko/NapCatQQ): 现代化的基于 NTQQ 的 Bot 协议端实现  
 
 ~~[go-cqhttp](https://github.com/Mrs4s/go-cqhttp): cqhttp的golang实现，轻量、原生跨平台.~~  
 ~~[nonebot-plugin-gocqhttp](https://github.com/mnixry/nonebot-plugin-gocqhttp): 一款在NoneBot2中直接运行go-cqhttp的插件, 无需额外下载安装~~  
