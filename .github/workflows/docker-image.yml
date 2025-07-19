@@ -37,3 +37,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ghcr.io/ylovexln/pallas-bot:latest
+          
+      - name: Clean up build cache
+        run: |
+          docker builder prune --all --force
