@@ -57,22 +57,12 @@ jobs:
           # 检查已知漏洞
           uv run pip-audit || true
 
-  build-and-push:
+  build-test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and push
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: true
-          tags: ghcr.io/ylovexln/pallas-bot:latest
+      - name: Test Docker build
+        run: |
+          docker build -t test-build .
