@@ -17,6 +17,8 @@ RUN uv pip install --system ".[perf]" --no-cache-dir && \
         nonebot-plugin-autoreply \
         bilichat-request \
         nonebot-plugin-bilichat && \
+    uv pip install --system playwright && \
+    PLAYWRIGHT_BROWSERS_PATH=/app/ms-playwright playwright install --with-deps firefox && \
     apt-get purge -y build-essential && \
     apt-get autoremove -y && \
     rm -rf /root/.cache/pip
