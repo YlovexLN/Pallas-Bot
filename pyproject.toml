@@ -46,5 +46,5 @@ url = "https://pypi.org/simple"
 adapters = [
     { name = "OneBot V11", module_name = "nonebot.adapters.onebot.v11" }
 ]
-plugins = ["nonebot_plugin_apscheduler", "nonebot_plugin_autoreply", "nonebot_plugin_resolver2"]
+plugins = ["nonebot_plugin_apscheduler", "nonebot_plugin_autoreply", "nonebot_plugin_bilichat"]
 plugin_dirs = ["src/plugins"]
