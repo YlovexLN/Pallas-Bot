@@ -16,3 +16,4 @@ services:
       - ./data:/app/data
       - ./resource/:/app/resource
       - ./.env:/app/.env
+      - ./ms-playwright:/app/ms-playwright
