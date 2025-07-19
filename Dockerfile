@@ -15,6 +15,7 @@ COPY pyproject.toml ./
 RUN uv pip install --system ".[perf]" --no-cache-dir && \
     uv pip install --system \
         nonebot-plugin-autoreply \
+        bilichat-request \
         nonebot-plugin-bilichat && \
     uv pip install --system playwright && \
     PLAYWRIGHT_BROWSERS_PATH=/app/ms-playwright playwright install --with-deps firefox && \
