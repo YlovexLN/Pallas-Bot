@@ -13,7 +13,7 @@ RUN apt-get update && \
 COPY pyproject.toml ./
 
 RUN uv pip install --system ".[perf]" --no-cache-dir && \
-    uv pip install nonebot_plugin_autoreply nonebot-plugin-resolver2 && \
+    uv pip install --system nonebot_plugin_autoreply nonebot-plugin-resolver2 && \
     apt-get purge -y build-essential && \
     apt-get autoremove -y && \
     rm -rf /root/.cache/pip
