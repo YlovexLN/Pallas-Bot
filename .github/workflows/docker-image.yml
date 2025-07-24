@@ -36,7 +36,7 @@ jobs:
           file: ./Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: ghcr.io/ylovexln/pallas-bot:latest
+          tags: ghcr.io/ylovexln/pallas-bot:beta
           
       - name: Clean up build cache
         run: |
