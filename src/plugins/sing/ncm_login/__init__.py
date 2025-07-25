@@ -17,7 +17,7 @@ class NCMLoginConfig(BaseModel, extra="ignore"):
     ncm_login_endpoint: str = "/api/ncm/login/cellphone/send-sms"
     ncm_verify_endpoint: str = "/api/ncm/login/cellphone/verify-sms"
     ncm_login_status_endpoint: str = "/api/ncm/login/status"
-    ncm_logout_endpoint: str = "/api/ncm/logout"
+    ncm_logout_endpoint: str = "/api/ncm/login/logout"
 
 
 plugin_config = get_plugin_config(NCMLoginConfig)
