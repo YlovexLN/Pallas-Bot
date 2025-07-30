@@ -37,3 +37,5 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ghcr.io/ylovexln/pallas-bot:latest
+          labels: |
+            org.opencontainers.image.source=https://github.com/YlovexLN/Pallas-Bot
