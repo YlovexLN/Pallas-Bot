@@ -5,10 +5,7 @@ WORKDIR /app
 
 # 合并安装依赖，清理缓存，减少镜像层数
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends build-essential \
-    # 添加以下两行
-    pkg-config \
-    libssl-dev && \
+    apt-get install -y --no-install-recommends build-essential && \
     pip install --upgrade pip && \
     pip install uv && \
     rm -rf /var/lib/apt/lists/*
