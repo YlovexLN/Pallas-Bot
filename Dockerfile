@@ -13,6 +13,7 @@ RUN apt-get update && \
 COPY pyproject.toml ./
 
 RUN uv pip install --system ".[perf]" --no-cache-dir && \
+    playwright install firefox && \
     apt-get purge -y build-essential && \
     apt-get autoremove -y && \
     rm -rf /root/.cache/pip
