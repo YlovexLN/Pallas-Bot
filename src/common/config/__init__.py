@@ -28,9 +28,13 @@ class Config:
             return cache.get(key)
 
     async def _update(self, key: str, value: Any) -> None:
-        await self._module_class.find_one(self._db_filter).upsert(
-            {"$set": {key: value}}, on_insert=self._module_class(**{self._primary_key: self._document_key, key: value})
-        )
+        document = await self._module_class.find_one(self._db_filter)
+        if document:
+            setattr(document, key, value)
+            await document.save()
+        else:
+            new_document = self._module_class(**{self._primary_key: self._document_key, key: value})
+            await new_document.insert()
 
     async def _update_in_memory(self, key: str, value: Any) -> None:
         async with self._lock:
@@ -265,7 +269,7 @@ class GroupConfig(Config):
         """
         刷新配置
         """
-        client = GroupConfigModule.get_motor_collection().database.client
+        client = GroupConfigModule.get_pymongo_collection().database.client
         async with await client.start_session() as session:
             config_module = await GroupConfigModule.find_one(GroupConfigModule.group_id == self, session=session)
             return config_module
