@@ -1,11 +1,10 @@
 import asyncio
-import logging
 from contextlib import asynccontextmanager
 from typing import Any
 
 import httpx
 from nonebot import get_bot, logger
-from tenacity import before_sleep_log, retry, retry_if_exception_type, stop_after_attempt, wait_exponential
+from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 
 async def is_bot_admin(bot_id: int, group_id: int, no_cache: bool = False) -> bool:

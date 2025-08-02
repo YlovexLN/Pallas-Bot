@@ -1,3 +1,4 @@
+# type: ignore
 import asyncio
 import time
 from typing import Any
@@ -6,6 +7,7 @@ from beanie import Document
 from pydantic import BaseModel
 
 from src.common.db import BotConfigModule, GroupConfigModule, SingProgress, UserConfigModule
+from src.common.utils.invalidate_cache import invalidate_cache
 
 KEY_JOINER = "."
 
@@ -30,6 +32,8 @@ class Config:
     async def _update(self, key: str, value: Any) -> None:
         document = await self._module_class.find_one(self._db_filter)
         if document:
+            if hasattr(self._module_class, "_cache") and self._module_class._cache:
+                invalidate_cache(self._module_class, document.id)
             setattr(document, key, value)
             await document.save()
         else:
@@ -264,15 +268,6 @@ class GroupConfig(Config):
         更新歌曲进度
         """
         await self._update("sing_progress", progress)
-
-    async def get_fresh_group_config_module(self: int):
-        """
-        刷新配置
-        """
-        client = GroupConfigModule.get_pymongo_collection().database.client
-        async with await client.start_session() as session:
-            config_module = await GroupConfigModule.find_one(GroupConfigModule.group_id == self, session=session)
-            return config_module
 
 
 class UserConfig(Config):
