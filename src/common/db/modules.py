@@ -26,7 +26,7 @@ class BotConfigModule(Document):
         name = "config"
         collection = "config"
         use_cache = True
-        cache_expiration_time = timedelta(minutes=30)
+        cache_expiration_time = timedelta(seconds=60)
         cache_capacity = 10000
 
 
@@ -40,7 +40,7 @@ class GroupConfigModule(Document):
         name = "group_config"
         collection = "group_config"
         use_cache = True
-        cache_expiration_time = timedelta(minutes=30)
+        cache_expiration_time = timedelta(seconds=60)
         cache_capacity = 10000
 
 
