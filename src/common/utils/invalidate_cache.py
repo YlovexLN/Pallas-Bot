@@ -13,12 +13,12 @@ def invalidate_cache(model_class: type[Document], document_id):
         found = False
 
         if isinstance(value, dict):
-            if value.get("id") == document_id:
+            if value.get("_id") == document_id:
                 found = True
 
         elif isinstance(value, list):
             for doc in value:
-                if isinstance(doc, dict) and doc.get("id") == document_id:
+                if isinstance(doc, dict) and doc.get("_id") == document_id:
                     found = True
                     break
 
