@@ -365,7 +365,7 @@ async def _(event: GroupMessageEvent):
 
 async def is_rescue_msg(event: GroupMessageEvent) -> bool:
     if event.get_plaintext().strip().startswith("牛牛救一下"):
-        return role_cache[event.self_id][event.group_id] in {"admin", "owner"}  # 只给群主和管理权限
+        return role_cache[event.self_id][event.group_id] in {"admin", "owner"}
     return False
 
 
@@ -373,13 +373,15 @@ rescue_msg = on_message(
     priority=5,
     block=True,
     rule=Rule(is_rescue_msg),
-    permission=permission.GROUP,
+    permission=IsAdmin,
 )
 
 
 @rescue_msg.handle()
 async def _(bot: Bot, event: GroupMessageEvent):
     current_group_id = event.group_id
+    if random.random() < 0.125:
+        await rescue_msg.finish("怎...怎会如此？！命运的轮盘无法操控，沉默之人无法解放...")
 
     at_list = [
         msg_seg.data["qq"] for msg_seg in event.message if msg_seg.type == "at" and msg_seg.data.get("qq") != "all"
