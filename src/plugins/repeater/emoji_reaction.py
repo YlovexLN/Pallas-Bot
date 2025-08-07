@@ -9,7 +9,12 @@ from nonebot.adapters.onebot.v11 import GroupMessageEvent, NoticeEvent
 from nonebot.exception import ActionFailed
 from nonebot.rule import Rule
 from nonebot.typing import T_State
-from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
+from tenacity import (
+    retry,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_exponential,
+)
 
 from .config import Config
 
@@ -328,7 +333,10 @@ reaction_msg = on_message(
 async def handle_reaction(bot: Bot, event: GroupMessageEvent):
     """对所有消息，满足概率回应表情"""
     if not plugin_config.enable_probability_reaction:
-        logger.debug("[Reaction] Probability reaction is disabled", extra={"bot_id": str(bot.self_id)})
+        logger.debug(
+            "[Reaction] Probability reaction is disabled",
+            extra={"bot_id": str(bot.self_id)},
+        )
         return
 
     bot_id = str(bot.self_id)
@@ -367,7 +375,8 @@ async def handle_reaction_with_face(bot: Bot, event: GroupMessageEvent):
         await send_reaction(bot, event, emoji_code)
     except ActionFailed as e:
         logger.error(
-            f"[Reaction] Bot {bot_id} failed to send face reaction emoji {emoji_code}: {str(e)}", exc_info=True
+            f"[Reaction] Bot {bot_id} failed to send face reaction emoji {emoji_code}: {str(e)}",
+            exc_info=True,
         )
 
 
