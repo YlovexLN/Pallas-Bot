@@ -41,17 +41,25 @@ async def handle_help_command(
     bot_id, group_id = get_context_info(bot, event)
     style_name = default_style_name
 
+    is_superuser = await SUPERUSER(bot, event)
+    is_private = isinstance(event, PrivateMessageEvent)
+    show_ignored = is_superuser and is_private
+
     if len(args) == 0:
         # 一级菜单：显示所有插件列表（包含状态）
-        markdown_content = generate_plugins_markdown(plugin_config)
-        markdown_content = await fill_plugin_status(markdown_content, bot_id, group_id)
+        markdown_content = generate_plugins_markdown(
+            plugin_config,
+            show_ignored=show_ignored,
+            ignored_plugins=plugin_config.ignored_plugins if plugin_config else [],
+        )
+        markdown_content = await fill_plugin_status(markdown_content, bot_id, group_id, show_ignored)
         await send_markdown_as_image(markdown_content, style_name, available_styles, matcher, group_id)
         return
 
     # 处理插件标识符（适用于二级和三级菜单）
     plugin_identifier = args[0]
     plugin_name, error_message = await find_plugin_by_identifier(
-        plugin_identifier, plugin_config.ignored_plugins if plugin_config else []
+        plugin_identifier, [] if show_ignored else (plugin_config.ignored_plugins if plugin_config else [])
     )
 
     if error_message:
@@ -98,19 +106,22 @@ async def handle_plugin_operation(
     args = event.get_plaintext().strip().split()[1:] if event.get_plaintext() else []
     bot_id, group_id = get_context_info(bot, event)
 
+    is_superuser = await SUPERUSER(bot, event)
+    is_private = isinstance(event, PrivateMessageEvent)
+    show_ignored = is_superuser and is_private
+
     plugin_identifier = state.get("plugin_name", "") or (args[0] if args else "")
 
     if not plugin_identifier:
         await matcher.finish(f"博士，即使身为大祭司，你不说想要{action}什么，我也帮不了你呀")
         return
 
-    plugin_name, error_message = await find_plugin_by_identifier(plugin_identifier)
+    plugin_name, error_message = await find_plugin_by_identifier(plugin_identifier, [] if show_ignored else None)
     if error_message or plugin_name is None:
         await matcher.finish(error_message or f"博士，你说的'{plugin_name}'是什么呀？")
         return
 
-    # 超级用户可以指定全局操作或特定群
-    is_superuser = await SUPERUSER(bot, event)
+    # 超级用户可以指定全局操作或特定群:牛牛关闭 4 1234567
     if is_superuser and len(args) > 1:
         if args[1].lower() == "global":
             group_id = None  # 全局操作

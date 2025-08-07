@@ -346,13 +346,20 @@ async def find_plugin_by_identifier(plugin_identifier: str, ignored_plugins: lis
         )
 
 
-async def fill_plugin_status(markdown_content: str, bot_id: int = None, group_id: int = None) -> str:
+async def fill_plugin_status(
+    markdown_content: str, bot_id: int = None, group_id: int = None, show_ignored: bool = False
+) -> str:
     from .styles import load_config
 
     plugin_config = load_config()
 
-    ignored_plugins = plugin_config.ignored_plugins if plugin_config else []
-    filtered_plugins = [p for p in get_loaded_plugins() if p.name and p.name not in ignored_plugins]
+    if show_ignored:
+        # 超级用户在私聊时显示所有插件
+        filtered_plugins = [p for p in get_loaded_plugins() if p.name]
+    else:
+        # 普通情况，过滤掉忽略的插件
+        ignored_plugins = plugin_config.ignored_plugins if plugin_config else []
+        filtered_plugins = [p for p in get_loaded_plugins() if p.name and p.name not in ignored_plugins]
 
     sorted_plugins = sorted(filtered_plugins, key=lambda p: p.name or "")
     logger.debug(f"已排序的插件列表 (共{len(sorted_plugins)}个)")

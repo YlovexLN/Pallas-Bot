@@ -5,15 +5,23 @@ from .config import Config
 plugin_config = get_plugin_config(Config)
 
 
-def generate_plugins_markdown(plugin_config: Config, detail: bool = False) -> str:
+def generate_plugins_markdown(
+    plugin_config: Config, detail: bool = False, show_ignored: bool = False, ignored_plugins: list = None
+) -> str:
     """生成一级菜单"""
     plugins = get_loaded_plugins()
 
-    ignored_plugins = plugin_config.ignored_plugins if plugin_config else []
-    filtered_plugins = [plugin for plugin in plugins if plugin.name and plugin.name not in ignored_plugins]
+    if show_ignored:
+        # 超级用户在私聊时显示所有插件
+        filtered_plugins = [plugin for plugin in plugins if plugin.name]
+    else:
+        # 普通情况，过滤掉忽略的插件
+        ignored_plugins = ignored_plugins or (plugin_config.ignored_plugins if plugin_config else [])
+        filtered_plugins = [plugin for plugin in plugins if plugin.name and plugin.name not in ignored_plugins]
 
     # 构建Markdown内容
-    markdown_content = "# 牛牛帮助\n\n"
+    title = "# 牛牛帮助" if not show_ignored else "# 牛牛帮助 - 超级用户"
+    markdown_content = f"{title}\n\n"
     markdown_content += f"总计加载插件数量: {len(filtered_plugins)}\n\n"
 
     markdown_content += "| 序号 | 插件名称 | 状态 | 插件简介 |\n"
@@ -37,6 +45,9 @@ def generate_plugins_markdown(plugin_config: Config, detail: bool = False) -> st
         status_placeholder = "{status}"
 
         markdown_content += f"| {index} | {plugin_name} | {status_placeholder} | {description} |\n"
+
+    if show_ignored:
+        markdown_content += "\n> 超管视图：显示所有插件\n"
 
     markdown_content += "\n使用方法:\n"
     markdown_content += "- 使用 `牛牛帮助 <序号或插件名>` 查看插件详细功能\n"
@@ -182,17 +193,23 @@ def generate_function_detail_markdown(plugin_config: Config, plugin_name: str, f
     return markdown_content
 
 
-def generate_plugins_status_markdown(plugin_config: Config, scope_info: str = "当前群") -> str:
+def generate_plugins_status_markdown(
+    plugin_config: Config, scope_info: str = "当前群", show_ignored: bool = False, ignored_plugins: list = None
+) -> str:
     """生成插件状态"""
     plugins = get_loaded_plugins()
 
-    ignored_plugins = plugin_config.ignored_plugins if plugin_config else []
-    filtered_plugins = [plugin for plugin in plugins if plugin.name and plugin.name not in ignored_plugins]
+    if show_ignored:
+        filtered_plugins = [plugin for plugin in plugins if plugin.name]
+    else:
+        ignored_plugins = ignored_plugins or (plugin_config.ignored_plugins if plugin_config else [])
+        filtered_plugins = [plugin for plugin in plugins if plugin.name and plugin.name not in ignored_plugins]
 
     sorted_plugins = sorted(filtered_plugins, key=lambda p: p.name or "")
     logger.debug(f"生成插件状态Markdown: 共{len(sorted_plugins)}个插件")
 
-    markdown_content = f"# 牛牛插件状态 ({scope_info})\n\n"
+    title = f"# 牛牛插件状态 ({scope_info})" if not show_ignored else f"# 牛牛插件状态 ({scope_info} - 超级用户)"
+    markdown_content = f"{title}\n\n"
     markdown_content += f"总计加载插件数量: {len(sorted_plugins)}\n\n"
 
     markdown_content += "| 序号 | 插件名称 | 状态 | 插件简介 |\n"
@@ -210,6 +227,9 @@ def generate_plugins_status_markdown(plugin_config: Config, scope_info: str = "�
         status_placeholder = "{status}"
 
         markdown_content += f"| {index} | {plugin_name} | {status_placeholder} | {description} |\n"
+
+    if show_ignored:
+        markdown_content += "\n> 超管视图：显示所有插件\n"
 
     markdown_content += "\n使用方法:\n"
     markdown_content += "- 使用 `牛牛开启 <序号或插件名>` 启用插件\n"
