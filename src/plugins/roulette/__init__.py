@@ -33,8 +33,9 @@ __plugin_meta__ = PluginMetadata(
     - 发送"牛牛开枪"进行轮盘游戏
     - 牛牛喝酒会乱开枪哦
 3. 救援功能：
-    - 管理员发送"牛牛救一下"可以解除所有禁言
-    - 管理员发送"牛牛救一下@用户"可以解除指定用户的禁言
+    - 发送"牛牛救一下"可以解除所有禁言
+    - 发送"牛牛救一下@用户"可以解除指定用户的禁言
+    - 牛牛救一下有概率炸膛，喝酒后会引发特别的效果...
     """.strip(),
     type="application",
     homepage="https://github.com/PallasBot",
@@ -68,7 +69,7 @@ __plugin_meta__ = PluginMetadata(
                 "trigger_method": "on_message",
                 "trigger_condition": "牛牛救一下",
                 "brief_des": "解除被禁言的用户",
-                "detail_des": "管理员可以使用救援功能解除被禁言的用户。发送'牛牛救一下'解除所有禁言，发送'牛牛救一下@用户'解除指定用户的禁言。",  # noqa: E501
+                "detail_des": "解除被禁言的用户。发送'牛牛救一下'解除所有禁言，发送'牛牛救一下@用户'解除指定用户的禁言。在牛牛喝酒以后，牛牛救一下有概率把请求的人处决了()",  # noqa: E501
             },
         ],
         "menu_template": "default",
@@ -430,7 +431,7 @@ rescue_msg = on_message(
     priority=5,
     block=True,
     rule=Rule(is_rescue_msg),
-    permission=IsAdmin,
+    permission=permission.GROUP,
 )
 
 
@@ -438,7 +439,46 @@ rescue_msg = on_message(
 async def _(bot: Bot, event: GroupMessageEvent):
     current_group_id = event.group_id
     if random.random() < 0.125:
-        await rescue_msg.finish("怎...怎会如此？！命运的轮盘无法操控，沉默之人无法解放...")
+        await rescue_msg.finish("十二英雄神殿中的圣火也依然在熊熊燃烧吧，只是我再也没资格去点燃圣火了...")
+
+    if await BotConfig(event.self_id, event.group_id).drunkenness() > 0 and random.random() < 0.3:
+        mode = await GroupConfig(event.group_id).roulette_mode()
+        if mode == 0:
+            user_info = await bot.call_api(
+                "get_group_member_info",
+                **{
+                    "user_id": event.user_id,
+                    "group_id": event.group_id,
+                },
+            )
+            user_role = user_info["role"]
+
+            if user_role != "owner" and not (
+                user_role == "admin" and role_cache[event.self_id][event.group_id] != "owner"
+            ):
+                kicked_users[event.group_id].add(event.user_id)
+                await bot.call_api(
+                    "set_group_kick",
+                    **{
+                        "user_id": event.user_id,
+                        "group_id": event.group_id,
+                    },
+                )
+                await rescue_msg.finish("呃......咳嗯，博士，这个叫“二踢脚”的可以在我头上放吗...")
+            else:
+                await rescue_msg.finish("呃......咳嗯，博士，这个叫“二踢脚”的是在他头上放吗...")
+        else:
+            await bot.call_api(
+                "set_group_ban",
+                **{
+                    "user_id": event.user_id,
+                    "group_id": event.group_id,
+                    "duration": random.randint(5, 20) * 60,
+                },
+            )
+            ban_players[event.group_id].append(event.user_id)
+            await rescue_msg.finish("呃......咳嗯，博士，这个叫“二踢脚”的是在他头上放吗...")
+        return
 
     at_list = [
         msg_seg.data["qq"] for msg_seg in event.message if msg_seg.type == "at" and msg_seg.data.get("qq") != "all"
