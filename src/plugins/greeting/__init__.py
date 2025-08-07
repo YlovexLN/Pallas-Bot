@@ -1,7 +1,7 @@
 import asyncio
 import random
 
-from nonebot import get_bot, on_message, on_notice
+from nonebot import get_bot, get_plugin_config, on_message, on_notice
 from nonebot.adapters import Bot
 from nonebot.adapters.onebot.v11 import (
     FriendAddNoticeEvent,
@@ -21,7 +21,10 @@ from nonebot.typing import T_State
 from src.common.config import BotConfig, GroupConfig, UserConfig
 from src.common.utils import is_bot_admin
 
+from .config import Config
 from .voice import get_random_voice, get_voice_filepath
+
+plugin_config = get_plugin_config(Config)
 
 operator = "Pallas"
 greeting_voices = [
@@ -160,5 +163,6 @@ async def handle_first_receive(
 
     # 被踢了拉黑该群（所以拉黑了又能做什么呢）
     elif event.notice_type == "group_decrease" and event.sub_type == "kick_me":
-        await GroupConfig(event.group_id).ban()
-        await UserConfig(event.operator_id).ban()
+        if plugin_config.enable_kick_ban:
+            await GroupConfig(event.group_id).ban()
+            await UserConfig(event.operator_id).ban()
