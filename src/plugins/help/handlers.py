@@ -118,7 +118,7 @@ async def handle_plugin_operation(
 
     plugin_name, error_message = await find_plugin_by_identifier(plugin_identifier, [] if show_ignored else None)
     if error_message or plugin_name is None:
-        await matcher.finish(error_message or f"博士，你说的'{plugin_name}'是什么呀？")
+        await matcher.finish(error_message or f"博士，你说的'{plugin_identifier}'是什么呀？")
         return
 
     # 超级用户可以指定全局操作或特定群:牛牛关闭 4 1234567

@@ -167,14 +167,10 @@ def find_plugin(plugin_name: str) -> Any | None:
 
     for plugin in plugins:
         if plugin.name and plugin.name.lower() == plugin_name.lower():
-            if plugin.name in ignored_plugins:
-                return None
             return plugin
 
     for plugin in plugins:
         if plugin.name and plugin_name.lower() in plugin.name.lower():
-            if plugin.name in ignored_plugins:
-                return None
             return plugin
 
     return None
@@ -232,13 +228,22 @@ async def toggle_plugin(
     # 查找插件
     target_plugin = find_plugin(plugin_name)
     if not target_plugin:
-        return False, f"博士，你说的'{plugin_name}'是什么呀？"
+        # 检查插件是否在忽略列表中
+        plugins = get_loaded_plugins()
+        for plugin in plugins:
+            if plugin.name and plugin.name.lower() == plugin_name.lower():
+                if plugin.name in ignored_plugins:
+                    # 如果是被忽略的插件，仍然允许超级用户操作
+                    target_plugin = plugin
+                    break
+        if not target_plugin:
+            return False, f"博士，你说的'{plugin_name}'是什么呀？"
 
     plugin_name = target_plugin.name
     logger.debug(f"操作插件: {plugin_name}, 操作类型: {action}, 群ID: {group_id}, BotID: {bot_id}")
 
     if plugin_name in ignored_plugins:
-        return False, None
+        pass
 
     if bot_id and not group_id:
         return await _handle_global_plugin_operation(plugin_name, bot_id, action)
@@ -318,6 +323,9 @@ async def find_plugin_by_identifier(plugin_identifier: str, ignored_plugins: lis
 
     # 如果不是数字，直接返回插件名称
     if not plugin_identifier.isdigit():
+        plugin = find_plugin(plugin_identifier)
+        if not plugin:
+            return None, f"博士，你说的'{plugin_identifier}'是什么呀？"
         return plugin_identifier, None
 
     # 获取插件配置
@@ -328,7 +336,9 @@ async def find_plugin_by_identifier(plugin_identifier: str, ignored_plugins: lis
         ignored_plugins = plugin_config.ignored_plugins if plugin_config else []
 
     # 过滤和排序插件
-    filtered_plugins = [p for p in get_loaded_plugins() if p.name and p.name not in ignored_plugins]
+    filtered_plugins = [
+        p for p in get_loaded_plugins() if p.name and (ignored_plugins is None or p.name not in ignored_plugins)
+    ]
     sorted_plugins = sorted(filtered_plugins, key=lambda p: p.name or "")
 
     # 检查序号是否有效
