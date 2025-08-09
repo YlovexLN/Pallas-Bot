@@ -1,6 +1,6 @@
 import time
 
-from nonebot import get_plugin_config, on_message
+from nonebot import get_plugin_config, logger, on_message
 from nonebot.adapters import Bot, Event
 from nonebot.adapters.onebot.v11 import GroupMessageEvent, permission
 from nonebot.plugin import PluginMetadata
@@ -132,13 +132,8 @@ async def is_to_sing(event: GroupMessageEvent, state: T_State) -> bool:
         return True
 
     if text in SING_CONTINUE_CMDS:
-        group_id = event.group_id
-        config_module = await GroupConfig.get_fresh_group_config_module(group_id)
-        if not config_module:
-            return
-
         progress = await GroupConfig(group_id=event.group_id).sing_progress()
-        print(progress)
+        logger.info(f"now progress: {progress}")
         if not progress:
             return False
 
@@ -281,6 +276,7 @@ song_title_cmd = on_message(
 async def _(event: GroupMessageEvent):
     config = GroupConfig(event.group_id, cooldown=10)
     progress = await config.sing_progress()
+    logger.info(f"now progress: {progress}")
 
     if not progress:
         return
