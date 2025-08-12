@@ -13,6 +13,11 @@ class SingProgress(BaseModel):
     chunk_index: int = 0
     key: int = 0
 
+    def __init__(self, **data):
+        if "song_id" in data and isinstance(data["song_id"], int):
+            data["song_id"] = str(data["song_id"])
+        super().__init__(**data)
+
 
 class BotConfigModule(Document):
     account: int = Field(...)
