@@ -25,7 +25,14 @@ class Config(BaseModel, extra="ignore"):
     custom_styles: list[StyleConfig] = []
 
     # 忽略的插件列表
-    ignored_plugins: list[str] = ["nonebot_plugin_apscheduler", "auto_accept", "callback", "block", "greeting"]
+    ignored_plugins: list[str] = [
+        "nonebot-plugin-alconna",
+        "nonebot_plugin_apscheduler",
+        "auto_accept",
+        "callback",
+        "block",
+        "greeting",
+    ]
 
 
 # 默认使用的样式名称

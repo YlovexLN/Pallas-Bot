@@ -1,7 +1,5 @@
-import asyncio
 import random
 import time
-from collections import defaultdict
 
 from nonebot import get_plugin_config, logger, on_message, on_notice, require
 from nonebot.adapters import Bot, Event
@@ -9,12 +7,7 @@ from nonebot.adapters.onebot.v11 import GroupMessageEvent, NoticeEvent
 from nonebot.exception import ActionFailed
 from nonebot.rule import Rule
 from nonebot.typing import T_State
-from tenacity import (
-    retry,
-    retry_if_exception_type,
-    stop_after_attempt,
-    wait_exponential,
-)
+from nonebot_plugin_alconna import message_reaction
 
 from .config import Config
 
@@ -188,23 +181,13 @@ EMOJI_IDS = (
 )  # 官方文档就这么多
 
 
-SUPPORTED_PROTOCOLS = ("Lagrange", "NapCat")  # 一统天下的日子还没来吗
-
-
 def get_random_emoji() -> str:
     return str(random.choice(EMOJI_IDS))
 
 
 sent_reactions: dict[str, dict[int, float]] = {}
 last_cleanup_time = 0
-last_successful_protocol: dict[str, str] = {}
 plugin_config = get_plugin_config(Config)
-
-
-RETRY_MAX_ATTEMPTS = 3
-TIMEOUT = 10
-bot_locks = defaultdict(lambda: defaultdict(asyncio.Lock))
-last_used_time = {}
 
 
 def should_trigger_reaction() -> bool:
@@ -223,93 +206,30 @@ def mark_reaction_sent(bot_id: str, message_id: int):
     sent_reactions[bot_id][message_id] = time.time()
 
 
-@retry(
-    stop=stop_after_attempt(RETRY_MAX_ATTEMPTS),
-    wait=wait_exponential(multiplier=1, max=10),
-    retry=retry_if_exception_type((ActionFailed, asyncio.TimeoutError)),
-    reraise=True,
-)
-async def _attempt_send(bot: Bot, event: Event, emoji_code: str, protocol: str):
-    bot_id = str(bot.self_id)
-    message_id = event.message_id
-
-    try:
-        if protocol == "Lagrange":
-            await asyncio.wait_for(
-                bot.call_api(
-                    "set_group_reaction",
-                    group_id=event.group_id,
-                    message_id=message_id,
-                    code=emoji_code,
-                    is_add=True,
-                ),
-                timeout=TIMEOUT,
-            )
-        elif protocol == "NapCat":
-            await asyncio.wait_for(
-                bot.call_api(
-                    "set_msg_emoji_like",
-                    message_id=message_id,
-                    emoji_id=emoji_code,
-                    set=True,
-                ),
-                timeout=TIMEOUT,
-            )
-
-        last_successful_protocol[bot_id] = protocol
-        mark_reaction_sent(bot_id, message_id)
-
-        logger.info(
-            f"[Reaction] Bot {bot_id} successfully sent emoji {emoji_code} via {protocol} in group {event.group_id}"
-        )
-    except (TimeoutError, ActionFailed) as e:
-        logger.warning(
-            f"[Reaction] Bot {bot_id} failed to send emoji via {protocol} in group {event.group_id}: {str(e)}",
-            exc_info=True,
-        )
-        raise
-    except Exception as e:
-        logger.error(
-            f"[Reaction] Unexpected error when sending emoji via {protocol}: {str(e)}",
-            exc_info=True,
-        )
-        raise
-
-
 async def send_reaction(bot: Bot, event: Event, emoji_code: str) -> None:
     bot_id = str(bot.self_id)
     message_id = event.message_id
-    group_id = event.group_id
 
     if has_sent_reaction(bot_id, message_id):
         logger.debug(f"[Reaction] Bot {bot_id} already reacted to message {message_id}")
         return
 
-    async with bot_locks[bot_id][group_id]:
-        last_used_time[(bot_id, group_id)] = time.time()
-
-        if bot_id in last_successful_protocol:
-            protocol = last_successful_protocol[bot_id]
-            try:
-                await _attempt_send(bot, event, emoji_code, protocol)
-                return
-            except (TimeoutError, ActionFailed):
-                if bot_id in last_successful_protocol:
-                    del last_successful_protocol[bot_id]
-
-        for protocol in SUPPORTED_PROTOCOLS:
-            try:
-                await _attempt_send(bot, event, emoji_code, protocol)
-                return
-            except (TimeoutError, ActionFailed):
-                continue
-
-        logger.error(
-            f"[Reaction] Bot {bot_id} failed to send emoji {emoji_code} "
-            f"in group {event.group_id} using all available protocols",
+    try:
+        await message_reaction(emoji_code, str(message_id), event, bot, delete=False)
+        mark_reaction_sent(bot_id, message_id)
+        logger.debug(f"[Reaction] Bot {bot_id} successfully sent emoji {emoji_code} in group {event.group_id}")
+    except ActionFailed as e:
+        logger.debug(
+            f"[Reaction] Bot {bot_id} failed to send emoji {emoji_code} in group {event.group_id}: {str(e)}",
             exc_info=True,
         )
-        raise ActionFailed("All protocols failed to send reaction")
+        raise
+    except Exception as e:
+        logger.debug(
+            f"[Reaction] Unexpected error when sending emoji {emoji_code}: {str(e)}",
+            exc_info=True,
+        )
+        raise
 
 
 async def reaction_enabled(bot: Bot, event: Event, state: T_State) -> bool:
@@ -345,7 +265,7 @@ async def handle_reaction(bot: Bot, event: GroupMessageEvent):
     try:
         await send_reaction(bot, event, emoji_code)
     except ActionFailed as e:
-        logger.error(
+        logger.debug(
             f"[Reaction] Bot {bot_id} failed to send emoji {emoji_code} in group {event.group_id}: {str(e)}",
             exc_info=True,
         )
@@ -374,7 +294,7 @@ async def handle_reaction_with_face(bot: Bot, event: GroupMessageEvent):
     try:
         await send_reaction(bot, event, emoji_code)
     except ActionFailed as e:
-        logger.error(
+        logger.debug(
             f"[Reaction] Bot {bot_id} failed to send face reaction emoji {emoji_code}: {str(e)}",
             exc_info=True,
         )
@@ -413,7 +333,7 @@ async def handle_auto_reaction(bot: Bot, event: NoticeEvent, state: T_State):
         emoji_code = str(event.code)
 
     if not emoji_code:
-        logger.warning(f"[Reaction] No valid emoji found in event for message {message_id}")
+        logger.debug(f"[Reaction] No valid emoji found in event for message {message_id}")
         return
     reply_emoji = str(emoji_code) if plugin_config.reply_with_same_emoji else get_random_emoji()
 
@@ -430,9 +350,7 @@ async def handle_auto_reaction(bot: Bot, event: NoticeEvent, state: T_State):
         await send_reaction(bot, event, reply_emoji)
         mark_reaction_sent(bot_id, message_id)
     except ActionFailed as e:
-        logger.warning(
-            f"[Reaction] Bot {bot_id} failed to send emoji {reply_emoji} in group {event.group_id}: {str(e)}"
-        )
+        logger.debug(f"[Reaction] Bot {bot_id} failed to send emoji {reply_emoji} in group {event.group_id}: {str(e)}")
 
 
 scheduler = require("nonebot_plugin_apscheduler").scheduler
@@ -442,7 +360,6 @@ scheduler = require("nonebot_plugin_apscheduler").scheduler
 def cleanup_expired_records():
     global last_cleanup_time
     current_time = time.time()
-    cleanup_protocol_cache()
 
     for bot_id in list(sent_reactions.keys()):
         sent_reactions[bot_id] = {
@@ -452,30 +369,6 @@ def cleanup_expired_records():
             del sent_reactions[bot_id]
 
     last_cleanup_time = current_time
-    logger.info(f"[Reaction] Cleanup completed. Total reactions cached: {sum(len(r) for r in sent_reactions.values())}")
-
-
-def cleanup_protocol_cache():
-    active_bots = set(sent_reactions.keys())
-    for bot_id in list(last_successful_protocol.keys()):
-        if bot_id not in active_bots:
-            del last_successful_protocol[bot_id]
-
-
-async def async_cleanup_idle_locks():
-    cutoff = time.time() - 3600  # 清理超过1小时未使用的锁
-    logger.info(f"[Reaction] Cleaning up idle bot locks (Total before: {len(bot_locks)})")
-
-    for bot_id in list(bot_locks.keys()):
-        group_locks = bot_locks[bot_id]
-        for group_id in list(group_locks.keys()):
-            if last_used_time.get((bot_id, group_id), 0) < cutoff:
-                del group_locks[group_id]
-                last_used_time.pop((bot_id, group_id), None)
-        if not group_locks:
-            del bot_locks[bot_id]
-
-    logger.info(f"[Reaction] Lock cleanup completed. Remaining bot locks: {sum(len(g) for g in bot_locks.values())}")
-
-
-scheduler.add_job(async_cleanup_idle_locks, "interval", minutes=5)
+    logger.debug(
+        f"[Reaction] Cleanup completed. Total reactions cached: {sum(len(r) for r in sent_reactions.values())}"
+    )
