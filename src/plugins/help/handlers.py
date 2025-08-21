@@ -87,7 +87,7 @@ async def handle_help_command(
 
         # 处理可能的错误
         if "未找到功能" in markdown_content:
-            await matcher.finish(f"博士，你说的'{plugin_name}'是什么呀？")
+            await matcher.finish(f"博士，我在'{plugin_name}'中没有找到这个功能哦")
         elif "错误" in markdown_content:
             await matcher.finish(f"博士，'{plugin_name}'只有这么多信息了")
 

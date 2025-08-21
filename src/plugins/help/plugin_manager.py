@@ -325,7 +325,20 @@ async def find_plugin_by_identifier(plugin_identifier: str, ignored_plugins: lis
     if not plugin_identifier.isdigit():
         plugin = find_plugin(plugin_identifier)
         if not plugin:
-            return None, f"博士，你说的'{plugin_identifier}'是什么呀？"
+            # 增强模糊匹配
+            plugins = get_loaded_plugins()
+            matched_plugins = [p for p in plugins if p.name and plugin_identifier.lower() in p.name.lower()]
+
+            if len(matched_plugins) == 1:
+                return matched_plugins[0].name, None
+            elif len(matched_plugins) > 1:
+                plugin_names = [p.name for p in matched_plugins]
+                return (
+                    None,
+                    f"博士，你说的'{plugin_identifier}'有多个可能：{'、'.join(plugin_names)}，请说得更具体一些哦",
+                )
+            else:
+                return None, f"博士，你说的'{plugin_identifier}'是什么呀？"
         return plugin_identifier, None
 
     # 获取插件配置

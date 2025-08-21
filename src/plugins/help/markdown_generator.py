@@ -146,20 +146,29 @@ def generate_function_detail_markdown(plugin_config: Config, plugin_name: str, f
 
     target_function = None
     target_index = -1
-    for index, item in enumerate(menu_data):
-        func = item.get("func", "")
-        if func.lower() == function_name.lower():
-            target_function = item
-            target_index = index + 1
-            break
 
-    if not target_function:
+    # 如果function_name是数字，则将其作为序号处理
+    if function_name.isdigit():
+        index = int(function_name) - 1
+        if 0 <= index < len(menu_data):
+            target_function = menu_data[index]
+            target_index = index + 1
+    else:
+        # 否则按名称匹配处理
         for index, item in enumerate(menu_data):
             func = item.get("func", "")
-            if function_name.lower() in func.lower():
+            if func.lower() == function_name.lower():
                 target_function = item
                 target_index = index + 1
                 break
+
+        if not target_function:
+            for index, item in enumerate(menu_data):
+                func = item.get("func", "")
+                if function_name.lower() in func.lower():
+                    target_function = item
+                    target_index = index + 1
+                    break
 
     if not target_function:
         return f"# 未找到功能\n\n在插件 '{target_plugin.name}' 中未找到功能 '{function_name}'。\n\n使用 `牛牛帮助 {target_plugin.name}` 查看功能列表。"  # noqa: E501
