@@ -25,12 +25,14 @@ __plugin_meta__ = PluginMetadata(
     - 可以指定音调："牛牛唱歌 富士山下 key=2" 或 "牛牛唱歌 富士山下 key=-2"
 2. 继续唱：
     - 发送"[角色名]继续唱"或"[角色名]接着唱"可以继续上次未完成的歌曲
-3. 查询歌曲：
+3. 点歌：
+    - 发送"牛牛点歌 [歌曲名]"，例如"牛牛点歌 富士山下"可以让牛牛播放原曲
+4. 查询歌曲：
     - 发送"[角色名]什么歌"、"[角色名]哪首歌"或"[角色名]啥歌"可以查询当前播放的歌曲名
-4. 播放：
+5. 播放：
     - 发送"[角色名]唱歌"可以播放唱过的歌
-5. 目前支持的角色：
-    - 牛牛 兔兔
+6. 目前支持的角色：
+    - 牛牛
     """.strip(),
     type="application",
     homepage="https://github.com/PallasBot",
@@ -51,6 +53,13 @@ __plugin_meta__ = PluginMetadata(
                 "trigger_condition": "[角色名]继续唱/接着唱",
                 "brief_des": "继续上次未完成的歌曲",
                 "detail_des": "继续播放上次未完成的歌曲的下一个片段。",
+            },
+            {
+                "func": "点歌",
+                "trigger_method": "on_message",
+                "trigger_condition": "牛牛点歌",
+                "brief_des": "播放网易云原曲",
+                "detail_des": "在vip有效的情况下优先播放vip歌曲",
             },
             {
                 "func": "牛牛什么歌",
@@ -77,10 +86,12 @@ SERVER_URL = f"http://{plugin_config.ai_server_host}:{plugin_config.ai_server_po
 
 SPEAKERS = plugin_config.sing_speakers.keys()
 SING_CMD = "唱歌"
+REQUEST_SONG_CMD = "点歌"
 SING_CONTINUE_CMDS = {"继续唱", "接着唱"}
 WHAT_SONG_CMDS = {"什么歌", "哪首歌", "啥歌"}
 SING_COOLDOWN_KEY = "sing"
 PLAY_COOLDOWN_KEY = "play"
+REQUEST_SONG_COOLDOWN_KEY = "request_song"
 WHAT_SONG_COOLDOWN_KEY = "song_title"
 
 
@@ -257,6 +268,90 @@ async def _(bot: Bot, event: GroupMessageEvent, state: T_State):
         },
     )
     await play_cmd.finish("欢呼吧！")
+
+
+async def is_to_request_song(event: GroupMessageEvent, state: T_State) -> bool:
+    if not plugin_config.sing_enable:
+        return False
+    text = event.get_plaintext()
+    if not text:
+        return False
+
+    if REQUEST_SONG_CMD not in text:
+        return False
+
+    if not text.endswith(REQUEST_SONG_CMD):
+        has_spk = False
+        for name, speaker in plugin_config.sing_speakers.items():
+            if not text.startswith(name):
+                continue
+            text = text.replace(name, "").strip()
+            has_spk = True
+            state["speaker"] = speaker
+            break
+
+        if not has_spk:
+            return False
+
+        if text.startswith(REQUEST_SONG_CMD):
+            song_name = text.replace(REQUEST_SONG_CMD, "").strip()
+            if not song_name:
+                return False
+            state["song_name"] = song_name
+            return True
+
+    return False
+
+
+request_song_msg = on_message(
+    rule=Rule(is_to_request_song),
+    priority=5,
+    block=True,
+    permission=permission.GROUP,
+)
+
+
+@request_song_msg.handle()
+async def _(bot: Bot, event: GroupMessageEvent, state: T_State):
+    config = GroupConfig(event.group_id, cooldown=10)
+    if not await config.is_cooldown(REQUEST_SONG_COOLDOWN_KEY):
+        return
+    await config.refresh_cooldown(REQUEST_SONG_COOLDOWN_KEY)
+
+    song_name = state["song_name"]
+
+    song_id = await get_song_id(song_name)
+    if not song_id:
+        return False
+
+    request_id = str(ULID())
+    url = f"{SERVER_URL}{plugin_config.request_endpoint}/{request_id}"
+
+    response = await HTTPXClient.post(
+        url,
+        json={
+            "song_id": song_id,
+        },
+    )
+    await TaskManager.add_task(
+        request_id,
+        {
+            "bot_id": bot.self_id,
+            "group_id": event.group_id,
+            "task_type": "request",
+            "start_time": time.time(),
+        },
+    )
+
+    if not response:
+        await sing_msg.finish("我习惯了站着不动思考。有时候啊，也会被大家突然戳一戳，看看睡着了没有。")
+        await TaskManager.remove_task(request_id)
+    task_id = response.json().get("task_id", "")
+    if not task_id:
+        await sing_msg.finish("我习惯了站着不动思考。有时候啊，也会被大家突然戳一戳，看看睡着了没有。")
+        await TaskManager.remove_task(request_id)
+
+    await sing_msg.finish("欢呼吧！")
 
 
 async def what_song(event: Event) -> bool:
