@@ -61,7 +61,7 @@ async def callback(
                     "group_id": group_id,
                 },
             )
-        elif file:
+        if file:
             file_content = await file.read()
             base64_file = base64.b64encode(file_content).decode()
             await bot.call_api(
