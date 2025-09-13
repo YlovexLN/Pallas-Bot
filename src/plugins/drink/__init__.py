@@ -2,7 +2,7 @@ import asyncio
 import random
 from datetime import datetime, timedelta
 
-from nonebot import get_bot, logger, on_message, require
+from nonebot import get_bot, get_driver, logger, on_message
 from nonebot.adapters.onebot.v11 import GroupMessageEvent, permission
 from nonebot.exception import ActionFailed
 from nonebot.plugin import PluginMetadata
@@ -10,8 +10,6 @@ from nonebot.rule import Rule
 from nonebot_plugin_apscheduler import scheduler
 
 from src.common.config import BotConfig
-
-require("nonebot_plugin_apscheduler")
 
 __plugin_meta__ = PluginMetadata(
     name="牛牛喝酒",
@@ -36,6 +34,8 @@ __plugin_meta__ = PluginMetadata(
         "menu_template": "default",
     },
 )
+
+driver = get_driver()
 
 
 async def is_drink_msg(event: GroupMessageEvent) -> bool:
@@ -99,12 +99,24 @@ async def _(event: GroupMessageEvent):
     sober_up_date = datetime.now() + timedelta(seconds=drunk_duration)
     scheduler.add_job(
         sober_up_later,
-        "date",
+        trigger="date",
         run_date=sober_up_date,
         args=(event.self_id, event.group_id),
     )
 
 
-@scheduler.scheduled_job("cron", hour="4")
+@scheduler.scheduled_job("cron", hour=4)
 async def update_data():
     await BotConfig.fully_sober_up()
+
+
+@driver.on_startup
+async def _startup():
+    if not scheduler.running:
+        scheduler.start()
+
+
+@driver.on_shutdown
+async def _shutdown():
+    if scheduler.running:
+        scheduler.shutdown(wait=False)

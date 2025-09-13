@@ -3,7 +3,7 @@ import random
 import re
 import time
 
-from nonebot import get_bot, get_driver, logger, on_message, on_notice, require
+from nonebot import get_bot, get_driver, logger, on_message, on_notice
 from nonebot.adapters import Bot
 from nonebot.adapters.onebot.v11 import GroupMessageEvent, GroupRecallNoticeEvent, Message, MessageSegment, permission
 from nonebot.exception import ActionFailed
@@ -11,6 +11,7 @@ from nonebot.permission import SUPERUSER, Permission
 from nonebot.plugin import PluginMetadata
 from nonebot.rule import Rule, keyword, to_me
 from nonebot.typing import T_State
+from nonebot_plugin_apscheduler import scheduler
 
 from src.common.config import BotConfig
 from src.common.utils.array2cqcode import try_convert_to_cqcode
@@ -346,10 +347,7 @@ async def _(bot: Bot, event: GroupMessageEvent, state: T_State):
         await ban_msg_latest.finish("这对角可能会不小心撞倒些家具，我会尽量小心。")
 
 
-speak_sched = require("nonebot_plugin_apscheduler").scheduler
-
-
-@speak_sched.scheduled_job("interval", seconds=60)
+@scheduler.scheduled_job("interval", seconds=60)
 async def speak_up():
     ret = await Chat.speak()
     if not ret:
@@ -377,10 +375,7 @@ async def speak_up():
         await asyncio.sleep(random.randint(2, 5))
 
 
-update_sched = require("nonebot_plugin_apscheduler").scheduler
-
-
-@update_sched.scheduled_job("cron", hour="4")
+@scheduler.scheduled_job("cron", hour=4)
 async def update_data():
     await Chat.sync()
     await Chat.clearup_context()

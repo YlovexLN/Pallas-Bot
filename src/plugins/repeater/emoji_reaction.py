@@ -1,13 +1,14 @@
 import random
 import time
 
-from nonebot import get_plugin_config, logger, on_message, on_notice, require
+from nonebot import get_plugin_config, logger, on_message, on_notice
 from nonebot.adapters import Bot, Event
 from nonebot.adapters.onebot.v11 import GroupMessageEvent, NoticeEvent
 from nonebot.exception import ActionFailed
 from nonebot.rule import Rule
 from nonebot.typing import T_State
 from nonebot_plugin_alconna import message_reaction
+from nonebot_plugin_apscheduler import scheduler
 
 from .config import Config
 
@@ -351,9 +352,6 @@ async def handle_auto_reaction(bot: Bot, event: NoticeEvent, state: T_State):
         mark_reaction_sent(bot_id, message_id)
     except ActionFailed as e:
         logger.debug(f"[Reaction] Bot {bot_id} failed to send emoji {reply_emoji} in group {event.group_id}: {str(e)}")
-
-
-scheduler = require("nonebot_plugin_apscheduler").scheduler
 
 
 @scheduler.scheduled_job("cron", hour=1)
