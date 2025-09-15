@@ -66,6 +66,10 @@ async def handle_help_command(
         await matcher.finish(error_message)
         return
 
+    if not plugin_name:
+        await matcher.finish(f"博士，你说的'{plugin_identifier}'是什么呀？")
+        return
+
     # 验证插件是否存在
     markdown_content = generate_plugin_functions_markdown(plugin_config, plugin_name)
     if "未找到插件" in markdown_content:

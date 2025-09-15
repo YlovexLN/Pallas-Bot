@@ -40,7 +40,7 @@ __plugin_meta__ = PluginMetadata(
     """.strip(),
     type="application",
     homepage="https://github.com/PallasBot",
-    supported_adapters=["~onebot.v11"],
+    supported_adapters={"~onebot.v11"},
     extra={
         "version": "2.0.0",
         "menu_data": [
@@ -259,7 +259,7 @@ async def _(bot: Bot, event: GroupMessageEvent):
         return False
 
     raw_message = ""
-    for item in event.reply.message:
+    for item in event.reply.message:  # type: ignore
         raw_reply = str(item)
         # 去掉图片消息中的 url, subType 等字段
         raw_message += re.sub(r"(\[CQ\:.+)(?:,url=*)(\])", r"\1\2", raw_reply)
@@ -267,7 +267,7 @@ async def _(bot: Bot, event: GroupMessageEvent):
     logger.info(f"bot [{event.self_id}] ready to ban [{raw_message}] in group [{event.group_id}]")
 
     try:
-        await bot.delete_msg(message_id=event.reply.message_id)
+        await bot.delete_msg(message_id=event.reply.message_id)  # type: ignore
     except ActionFailed:
         logger.warning(f"bot [{event.self_id}] failed to delete [{raw_message}] in group [{event.group_id}]")
 
@@ -337,7 +337,7 @@ async def _(bot: Bot, event: GroupMessageEvent, state: T_State):
     logger.info(f"bot [{event.self_id}] ready to ban latest reply in group [{event.group_id}]")
 
     try:
-        await bot.delete_msg(message_id=event.reply.message_id)
+        await bot.delete_msg(message_id=event.reply.message_id)  # type: ignore
     except ActionFailed:
         logger.warning(
             f"bot [{event.self_id}] failed to delete latest reply [{event.raw_message}] in group [{event.group_id}]"

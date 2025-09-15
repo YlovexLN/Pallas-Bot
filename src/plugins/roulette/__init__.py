@@ -2,11 +2,11 @@ import asyncio
 import random
 import time
 from collections import defaultdict
-from collections.abc import Awaitable
+from collections.abc import Awaitable, Callable
 
 from nonebot import get_bot, logger, on_message, on_notice, on_request
-from nonebot.adapters import Bot
 from nonebot.adapters.onebot.v11 import (
+    Bot,
     GroupAdminNoticeEvent,
     GroupMessageEvent,
     GroupRequestEvent,
@@ -39,7 +39,7 @@ __plugin_meta__ = PluginMetadata(
     """.strip(),
     type="application",
     homepage="https://github.com/PallasBot",
-    supported_adapters=["~onebot.v11"],
+    supported_adapters={"~onebot.v11"},
     extra={
         "version": "2.0.0",
         "menu_data": [
@@ -88,7 +88,7 @@ role_cache = defaultdict(lambda: defaultdict(str))
 shot_lock = asyncio.Lock()
 
 
-async def sync_role_cache(bot: Bot, event: GroupMessageEvent) -> str:
+async def sync_role_cache(bot: Bot, event: GroupMessageEvent | GroupAdminNoticeEvent) -> str:
     info = await bot.call_api(
         "get_group_member_info",
         **{
@@ -151,7 +151,7 @@ async def roulette(messagae_handle, event: GroupMessageEvent):
     logger.info(f"Roulette rand: {rand}")
     roulette_status[event.group_id] = rand
     roulette_count[event.group_id] = 0
-    roulette_time[event.group_id] = time.time()
+    roulette_time[event.group_id] = int(time.time())
     ban_players[event.group_id] = []
     partin = await participate_in_roulette(event)
     if partin:
@@ -166,7 +166,7 @@ async def roulette(messagae_handle, event: GroupMessageEvent):
     mode = await GroupConfig(event.group_id).roulette_mode()
     if mode == 0:
         type_msg = "踢出群聊"
-    elif mode == 1:
+    else:
         type_msg = "禁言"
     await messagae_handle.finish(
         f"这是一把充满荣耀与死亡的左轮手枪，六个弹槽只有一颗子弹，中弹的那个人将会被{type_msg}。勇敢的战士们啊，扣动你们的扳机吧！"
@@ -199,11 +199,13 @@ roulette_type_msg = on_message(
 @roulette_type_msg.handle()
 async def _(event: GroupMessageEvent):
     plaintext = event.get_plaintext().strip()
+    mode = None
     if "踢人" in plaintext:
         mode = 0
     elif "禁言" in plaintext:
         mode = 1
-    await GroupConfig(event.group_id).set_roulette_mode(mode)
+    if mode is not None:
+        await GroupConfig(event.group_id).set_roulette_mode(mode)
 
     await roulette(roulette_type_msg, event)
 
@@ -241,7 +243,7 @@ async def is_shot_msg(event: GroupMessageEvent) -> bool:
 kicked_users = defaultdict(set)
 
 
-async def shot(self_id: int, user_id: int, group_id: int) -> Awaitable[None] | None:
+async def shot(self_id: int, user_id: int, group_id: int) -> Callable[[], Awaitable[None]] | None:
     mode = await GroupConfig(group_id).roulette_mode()
     self_role = role_cache[self_id][group_id]
 
@@ -330,7 +332,7 @@ async def _(event: GroupMessageEvent):
         roulette_status[event.group_id] -= 1
         roulette_count[event.group_id] += 1
         shot_msg_count = roulette_count[event.group_id]
-        roulette_time[event.group_id] = time.time()
+        roulette_time[event.group_id] = int(time.time())
         roulette_player[event.group_id].append(event.user_id)
 
         if shot_msg_count == 6 and random.random() < 0.125:

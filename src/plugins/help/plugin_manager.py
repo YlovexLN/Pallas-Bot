@@ -15,7 +15,7 @@ ignored_plugins = plugin_config.ignored_plugins if plugin_config else []
 CORE_PLUGINS = ["help"]
 
 
-def clear_help_cache(group_id: int = None):
+def clear_help_cache(group_id: int | None = None):
     """清理本地帮助缓存"""
     cache_base_dir = Path("data/help")
     if not cache_base_dir.exists():
@@ -41,7 +41,7 @@ def clear_help_cache(group_id: int = None):
 
 
 async def is_plugin_disabled(
-    plugin_name: str, group_id: int = None, bot_id: int = None, ignore_cache: bool = False
+    plugin_name: str, group_id: int | None = None, bot_id: int | None = None, ignore_cache: bool = False
 ) -> bool:
     """
     检查插件是否被禁用
@@ -217,7 +217,7 @@ async def update_config_and_cache(
 
 
 async def toggle_plugin(
-    plugin_name: str, group_id: int = None, bot_id: int = None, action: str = "toggle"
+    plugin_name: str, group_id: int | None = None, bot_id: int | None = None, action: str = "toggle"
 ) -> tuple[bool, str | None]:
     """
     切换插件启用/禁用状态
@@ -247,7 +247,7 @@ async def toggle_plugin(
 
     if bot_id and not group_id:
         return await _handle_global_plugin_operation(plugin_name, bot_id, action)
-    elif group_id:
+    elif bot_id and group_id:
         return await _handle_group_plugin_operation(plugin_name, group_id, bot_id, action)
     else:
         return False, None
@@ -314,7 +314,7 @@ async def _handle_group_plugin_operation(plugin_name: str, group_id: int, bot_id
     return True, f"听你的，博士。{scope_info}我为你{action_name}了{plugin_name}"
 
 
-async def find_plugin_by_identifier(plugin_identifier: str, ignored_plugins: list = None):
+async def find_plugin_by_identifier(plugin_identifier: str, ignored_plugins: list | None = None):
     """
     根据插件名称或序号查找插件）
     """
@@ -370,7 +370,7 @@ async def find_plugin_by_identifier(plugin_identifier: str, ignored_plugins: lis
 
 
 async def fill_plugin_status(
-    markdown_content: str, bot_id: int = None, group_id: int = None, show_ignored: bool = False
+    markdown_content: str, bot_id: int | None = None, group_id: int | None = None, show_ignored: bool = False
 ) -> str:
     from .styles import load_config
 

@@ -26,7 +26,7 @@ def convert_image_to_bytes(image) -> io.BytesIO:
     return img_bytes
 
 
-def get_cache_path(markdown_content: str, style_name: str, group_id: int = None) -> Path:
+def get_cache_path(markdown_content: str, style_name: str, group_id: int | None = None) -> Path:
     """根据markdown内容和群id生成本地路径"""
     if group_id is not None:
         cache_dir = Path("data/help") / str(group_id)
@@ -39,7 +39,7 @@ def get_cache_path(markdown_content: str, style_name: str, group_id: int = None)
     return cache_dir / f"{content_hash}.png"
 
 
-def load_cached_image(markdown_content: str, style_name: str, group_id: int = None) -> bytes | None:
+def load_cached_image(markdown_content: str, style_name: str, group_id: int | None = None) -> bytes | None:
     """从本地加载图片"""
     cache_path = get_cache_path(markdown_content, style_name, group_id)
     if cache_path.exists():
@@ -47,7 +47,7 @@ def load_cached_image(markdown_content: str, style_name: str, group_id: int = No
     return None
 
 
-def save_image_to_cache(image_data: bytes, markdown_content: str, style_name: str, group_id: int = None) -> None:
+def save_image_to_cache(image_data: bytes, markdown_content: str, style_name: str, group_id: int | None = None) -> None:
     """将图片保存到本地"""
     cache_path = get_cache_path(markdown_content, style_name, group_id)
     cache_path.write_bytes(image_data)
@@ -72,7 +72,7 @@ async def _render_markdown(
 
 
 async def render_markdown_to_image(
-    markdown_content: str, style_name: str, available_styles: dict, group_id: int = None
+    markdown_content: str, style_name: str, available_styles: dict, group_id: int | None = None
 ) -> bytes:
     # 首先尝试从本地加载图片
     cached_image = load_cached_image(markdown_content, style_name, group_id)
@@ -90,7 +90,7 @@ async def render_markdown_to_image(
 
 
 async def send_markdown_as_image(
-    markdown_content: str, style_name: str, available_styles: dict, matcher: Matcher, group_id: int = None
+    markdown_content: str, style_name: str, available_styles: dict, matcher: Matcher, group_id: int | None = None
 ) -> None:
     # 获取缓存的图片或渲染新图片
     image_data = await render_markdown_to_image(markdown_content, style_name, available_styles, group_id)

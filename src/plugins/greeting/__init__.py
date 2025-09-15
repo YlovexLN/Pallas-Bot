@@ -75,7 +75,11 @@ async def handle_call_me_first_receive(bot: Bot, event: GroupMessageEvent, state
         return
     await config.refresh_cooldown("call_me")
 
-    msg: Message = MessageSegment.record(file=get_random_voice(operator, greeting_voices).read_bytes())
+    file_path = get_random_voice(operator, greeting_voices)
+    if not file_path:
+        await call_me_cmd.finish()
+
+    msg = MessageSegment.record(file=file_path.read_bytes())
     await call_me_cmd.finish(msg)
 
 
@@ -95,7 +99,10 @@ async def handle_to_me_first_receive(bot: Bot, event: GroupMessageEvent, state: 
     await config.refresh_cooldown("to_me")
 
     if len(event.get_plaintext().strip()) == 0 and not event.reply:
-        msg: Message = MessageSegment.record(file=get_random_voice(operator, greeting_voices).read_bytes())
+        file_path = get_random_voice(operator, greeting_voices)
+        if not file_path:
+            await to_me_cmd.finish()
+        msg = MessageSegment.record(file=file_path.read_bytes())
         await to_me_cmd.finish(msg)
 
 
@@ -115,7 +122,7 @@ async def handle_first_receive(
     | PokeNotifyEvent,
 ):
     if event.notice_type == "notify" and event.sub_type == "poke" and event.target_id == event.self_id:
-        config = BotConfig(event.self_id, event.group_id)
+        config = BotConfig(event.self_id, event.group_id)  # type: ignore
         if not await config.is_cooldown("poke"):
             return
         await config.refresh_cooldown("poke")
@@ -136,7 +143,7 @@ async def handle_first_receive(
         if event.user_id == event.self_id:
             msg = "我是来自米诺斯的祭司帕拉斯，会在罗德岛休息一段时间......虽然这么说，我渴望以美酒和戏剧被招待，更渴望走向战场。"  # noqa: E501
         elif await is_bot_admin(event.self_id, event.group_id):
-            msg: Message = MessageSegment.at(event.user_id) + MessageSegment.text(
+            msg = MessageSegment.at(event.user_id) + MessageSegment.text(
                 "博士，欢迎加入这盛大的庆典！我是来自米诺斯的祭司帕拉斯......要来一杯美酒么？"
             )
         else:
@@ -144,11 +151,17 @@ async def handle_first_receive(
         await all_notice.finish(msg)
 
     elif event.notice_type == "group_admin" and event.sub_type == "set" and event.user_id == event.self_id:
-        msg: Message = MessageSegment.record(file=get_voice_filepath(operator, "任命助理").read_bytes())
+        file_path = get_voice_filepath(operator, "任命助理")
+        if not file_path:
+            await all_notice.finish()
+        msg = MessageSegment.record(file=file_path.read_bytes())
         await all_notice.finish(msg)
 
     elif event.notice_type == "friend_add":
-        msg: Message = MessageSegment.record(file=get_voice_filepath(operator, "精英化晋升2").read_bytes())
+        file_path = get_voice_filepath(operator, "干员报到")
+        if not file_path:
+            await all_notice.finish()
+        msg = MessageSegment.record(file=file_path.read_bytes())
         await all_notice.finish(msg)
 
     # 单次被禁言超过 36 小时自动退群

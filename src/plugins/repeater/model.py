@@ -71,7 +71,7 @@ class ChatData:
             return self.plain_text
         else:
             # keywords_list.sort()
-            return " ".join(self._keywords_list)
+            return " ".join(self._keywords_list)  # type: ignore
 
     @cached_property
     def keywords_pinyin(self) -> str:
@@ -180,7 +180,7 @@ class Chat:
         await self._message_insert()
         return True
 
-    async def answer(self) -> AsyncGenerator[Message, None, None] | None:
+    async def answer(self) -> AsyncGenerator[Message, None] | None:
         """
         回复这句话，可能会分多次回复，也可能不回复
         """
@@ -214,7 +214,7 @@ class Chat:
                 "reply_keywords": Chat.REPLY_FLAG,
             })
 
-        async def yield_results(results: tuple[list[str], str]) -> AsyncGenerator[Message, None, None]:
+        async def yield_results(results: tuple[list[str], str]) -> AsyncGenerator[Message, None]:
             answer_list, answer_keywords = results
             group_bot_replies = Chat._reply_dict[group_id][bot_id]
             for item in answer_list:
@@ -233,7 +233,9 @@ class Chat:
                         ]
                 async with Chat._topics_lock:
                     Chat._recent_topics[group_id] += [
-                        k for k in self.chat_data._keywords_list if not k.startswith("牛牛")
+                        k
+                        for k in self.chat_data._keywords_list
+                        if not k.startswith("牛牛")  # type: ignore
                     ]
                 # if "[CQ:" not in item and len(item) > Chat.DRUNK_TTS_THRESHOLD and await self.config.drunkenness():
                 #     yield Message(Chat._text_to_speech(item))
@@ -271,7 +273,7 @@ class Chat:
         basic_delay = 600
 
         def group_popularity_cmp(lhs: tuple[int, list[MessageModel]], rhs: tuple[int, list[MessageModel]]) -> int:
-            def cmp(a: int, b: int):
+            def cmp(a: int | float, b: int | float) -> int:
                 return (a > b) - (a < b)
 
             lhs_group_id, lhs_msgs = lhs
@@ -509,7 +511,7 @@ class Chat:
 
         await MessageModel.insert_many(save_list)
 
-    async def _context_insert(self, pre_msg: MessageModel):
+    async def _context_insert(self, pre_msg: MessageModel | None):
         if not pre_msg:
             return
 
@@ -555,7 +557,7 @@ class Chat:
             context = Context(
                 keywords=pre_keywords,
                 time=cur_time,
-                trigger_count=1,
+                trigger_count=1,  # type: ignore
                 answers=[Answer(keywords=keywords, group_id=group_id, count=1, time=cur_time, messages=[raw_message])],
             )
             await context.insert()
@@ -787,35 +789,35 @@ class Chat:
         await Chat._sync_blacklist()
 
 
-if __name__ == "__main__":
-    # Chat.clearup_context()
-    # # while True:
-    test_data: ChatData = ChatData(
-        group_id=1234567,
-        user_id=1111111,
-        raw_message="完了又有新bug",
-        plain_text="完了又有新bug",
-        time=time.time(),
-        bot_id=0,
-    )
+# if __name__ == "__main__":
+#     Chat.clearup_context()
+#     while True:
+#     test_data: ChatData = ChatData(
+#         group_id=1234567,
+#         user_id=1111111,
+#         raw_message="完了又有新bug",
+#         plain_text="完了又有新bug",
+#         time=time.time(),
+#         bot_id=0,
+#     )
 
-    test_chat: Chat = Chat(test_data)
+#     test_chat: Chat = Chat(test_data)
 
-    print(test_chat.answer())
-    test_chat.learn()
+#     print(test_chat.answer())
+#     test_chat.learn()
 
-    test_answer_data: ChatData = ChatData(
-        group_id=1234567,
-        user_id=1111111,
-        raw_message="完了又有新bug",
-        plain_text="完了又有新bug",
-        time=time.time(),
-        bot_id=0,
-    )
+#     test_answer_data: ChatData = ChatData(
+#         group_id=1234567,
+#         user_id=1111111,
+#         raw_message="完了又有新bug",
+#         plain_text="完了又有新bug",
+#         time=time.time(),
+#         bot_id=0,
+#     )
 
-    test_answer: Chat = Chat(test_answer_data)
-    print(test_chat.answer())
-    test_answer.learn()
+#     test_answer: Chat = Chat(test_answer_data)
+#     print(test_chat.answer())
+#     test_answer.learn()
 
-    # time.sleep(5)
-    # print(Chat.speak())
+#     time.sleep(5)
+#     print(Chat.speak())

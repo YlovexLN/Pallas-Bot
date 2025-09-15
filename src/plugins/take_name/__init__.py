@@ -1,17 +1,16 @@
 import random
 
-from nonebot import get_bot, logger, on_notice, require
+from nonebot import get_bot, logger, on_notice
 from nonebot.adapters import Bot
 from nonebot.adapters.onebot.v11 import NoticeEvent, permission
 from nonebot.exception import ActionFailed
 from nonebot.plugin import PluginMetadata
 from nonebot.rule import Rule
+from nonebot_plugin_apscheduler import scheduler
 
 from src.common.config import BotConfig
 from src.common.utils import is_bot_admin
 from src.plugins.repeater.model import Chat
-
-change_name_sched = require("nonebot_plugin_apscheduler").scheduler
 
 __plugin_meta__ = PluginMetadata(
     name="自动夺舍",
@@ -24,7 +23,7 @@ __plugin_meta__ = PluginMetadata(
     """.strip(),
     type="application",
     homepage="https://github.com/PallasBot",
-    supported_adapters=["~onebot.v11"],
+    supported_adapters={"~onebot.v11"},
     extra={
         "version": "2.0.0",
         "menu_data": [
@@ -55,7 +54,7 @@ __plugin_meta__ = PluginMetadata(
 )
 
 
-@change_name_sched.scheduled_job("cron", minute="*/1")
+@scheduler.scheduled_job("cron", minute="*/1")
 async def change_name():
     rand_messages = await Chat.get_random_message_from_each_group()
     if not rand_messages:

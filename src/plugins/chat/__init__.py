@@ -24,7 +24,7 @@ __plugin_meta__ = PluginMetadata(
     """.strip(),
     type="application",
     homepage="https://github.com/PallasBot",
-    supported_adapters=["~onebot.v11"],
+    supported_adapters={"~onebot.v11"},
     extra={
         "version": "2.0.0",
         "menu_data": [

@@ -6,7 +6,7 @@ plugin_config = get_plugin_config(Config)
 
 
 def generate_plugins_markdown(
-    plugin_config: Config, detail: bool = False, show_ignored: bool = False, ignored_plugins: list = None
+    plugin_config: Config, detail: bool = False, show_ignored: bool = False, ignored_plugins: list | None = None
 ) -> str:
     """生成一级菜单"""
     plugins = get_loaded_plugins()
@@ -57,7 +57,9 @@ def generate_plugins_markdown(
     return markdown_content
 
 
-def generate_plugin_functions_markdown(plugin_config: Config, plugin_name: str, plugin_status: str = None) -> str:
+def generate_plugin_functions_markdown(
+    plugin_config: Config, plugin_name: str, plugin_status: str | None = None
+) -> str:
     """生成二级菜单"""
     plugins = get_loaded_plugins()
 
@@ -203,7 +205,7 @@ def generate_function_detail_markdown(plugin_config: Config, plugin_name: str, f
 
 
 def generate_plugins_status_markdown(
-    plugin_config: Config, scope_info: str = "当前群", show_ignored: bool = False, ignored_plugins: list = None
+    plugin_config: Config, scope_info: str = "当前群", show_ignored: bool = False, ignored_plugins: list | None = None
 ) -> str:
     """生成插件状态"""
     plugins = get_loaded_plugins()
