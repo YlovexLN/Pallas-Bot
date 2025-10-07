@@ -8,17 +8,13 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends build-essential && \
     pip install --upgrade pip && \
     pip install uv && \
-    # 安装Playwright浏览器依赖
-    apt-get install -y --no-install-recommends firefox-esr && \
     rm -rf /var/lib/apt/lists/*
 
 COPY pyproject.toml ./
 
 RUN uv pip install --system ".[perf]" --no-cache-dir && \
-    uv pip install --system bilichat-request --no-cache-dir && \
     # 安装Playwright浏览器
-    uv pip install --system playwright && \
-    playwright install firefox && \
+    #playwright install --with-deps firefox && \
     apt-get purge -y build-essential && \
     apt-get autoremove -y && \
     rm -rf /root/.cache/pip
