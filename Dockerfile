@@ -14,7 +14,7 @@ COPY pyproject.toml ./
 
 RUN uv pip install --system ".[perf]" --no-cache-dir && \
     # 安装Playwright浏览器
-    #playwright install --with-deps firefox && \
+    playwright install --with-deps firefox && \
     apt-get purge -y build-essential && \
     apt-get autoremove -y && \
     rm -rf /root/.cache/pip
