@@ -1,7 +1,9 @@
 services:
   pallasbot:
     container_name: pallasbot
-    image: pallasbot/pallas-bot:latest
+    # image: ghcr.io/ylovexln/pallas-bot:beta
+    image: ghcr.io/ylovexln/pallas-bot:latest
+    network_mode: bridge  # 使用默认的Docker桥接网络，不创建新网络
     restart: always
     ports:
       - 8088:8088
@@ -10,49 +12,12 @@ services:
       ENVIRONMENT: prod
       APP_MODULE: bot:app
       MAX_WORKERS: 1
-    networks:
-      - pallasbot
+      NAPCAT_UID: $(id -u)
+      NAPCAT_GID: $(id -g)
     volumes:
-      - ./pallas-bot/resource/:/app/resource
-      - ./pallas-bot/.env:/app/.env
-    depends_on:
-      mongodb:
-        condition: service_healthy
-
-  mongodb:
-    container_name: mongodb
-    image: mongo:8.0.10-noble
-    restart: always
-    ports:
-      - 27017:27017
-    environment:
-      TZ: Asia/Shanghai
-      wiredTigerCacheSizeGB: 1.5
-    networks:
-      - pallasbot
-    volumes:
-      - ./mongo/data:/data/db
-      - ./mongo/logs:/var/log/mongodb
-    healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
-      interval: 15s
-      timeout: 5s
-      retries: 3
-      start_period: 15s
-
-  napcat:
-    container_name: napcat
-    image: mlikiowa/napcat-docker:latest
-    restart: always
-    environment:
-      - NAPCAT_UID=${NAPCAT_UID:-1000}
-      - NAPCAT_GID=${NAPCAT_GID:-1000}
-    network_mode: bridge
-    ports:
-        - 6099:6099
-    volumes:
-      - ./NapCat/QQ:/app/.config/QQ
-      - ./NapCat/config:/app/napcat/config
-
-networks:
-  pallasbot:
+      - ./resource/:/app/resource
+      - ./.env:/app/.env
+      - ./data:/app/data
+      - ./data/bilichat/cache:/root/.cache/nonebot2/nonebot_plugin_bilichat
+      - ./data/bilichat/local:/root/.local/share/nonebot2/nonebot_plugin_bilichat
+      - ./ms-playwright:/root/.cache/ms-playwright
