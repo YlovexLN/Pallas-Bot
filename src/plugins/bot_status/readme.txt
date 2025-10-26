@@ -1,0 +1,3 @@
+离线邮箱通知会向BotConfig中设置好的admin与.env中设置的邮箱发送邮件，因此想给号主发邮件请配置好admins
+没有给Bot配置admins的请使用/tools/config.mongodb来添加
+邮箱配置请参考各邮箱的smtp配置
