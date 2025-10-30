@@ -47,7 +47,8 @@ services:
     environment:
       - NAPCAT_UID=${NAPCAT_UID:-1000}
       - NAPCAT_GID=${NAPCAT_GID:-1000}
-    network_mode: bridge
+    networks: 
+      - pallasbot
     ports:
         - 6099:6099
     volumes:
