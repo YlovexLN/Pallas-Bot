@@ -5,9 +5,10 @@ from nonebot import (
     get_driver,
     logger,
     on_command,
+    on_notice,
     require,
 )
-from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent, MessageEvent
+from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent, MessageEvent, NoticeEvent
 from nonebot.permission import SUPERUSER
 from nonebot.plugin import PluginMetadata
 
@@ -51,7 +52,7 @@ __plugin_meta__ = PluginMetadata(
 
 
 STATUS_COOLDOWN_KEY: str = "bot_status"
-
+offline_notice = on_notice(priority=5, block=False)
 bot_status_cmd = on_command("牛牛在吗", permission=SUPERUSER, priority=5, block=True)
 test_mail_cmd = on_command("测试邮件", permission=SUPERUSER, priority=5, block=True)
 
@@ -84,29 +85,46 @@ async def handle_bot_connect(bot: Bot) -> None:
         del offline_bots[bot_id]
 
 
-@driver.on_bot_disconnect
-async def handle_bot_disconnect(bot: Bot) -> None:
-    bot_id: int = int(bot.self_id)
-
-    nickname: str = "Unknown"
+async def get_bot_nickname(bot_id: int, current_bots: dict = None) -> str:
+    """获取牛牛昵称"""
+    nickname: str = "Unknown Nickname"
     try:
-        info = await bot.call_api("get_stranger_info", user_id=bot_id)
-        nickname = info.get("nickname", "Unknown Nickname")
-    except Exception as e:
-        logger.debug(f"Failed to get bot {bot_id} info using itself: {e}")
-        try:
-            bots = get_bots()
-            for bot_instance in bots.values():
-                if str(bot_id) != bot_instance.self_id:
+        bots = current_bots if current_bots is not None else get_bots()
+        if str(bot_id) in bots:
+            try:
+                info = await bots[str(bot_id)].call_api("get_stranger_info", user_id=bot_id)
+                nickname = info.get("nickname", "Unknown Nickname")
+                return nickname
+            except Exception as e:
+                logger.debug(f"Failed to get bot {bot_id} info using itself: {e}")
+
+        for bot_instance in bots.values():
+            if str(bot_id) != bot_instance.self_id:
+                try:
                     info = await bot_instance.call_api("get_stranger_info", user_id=bot_id)
                     nickname = info.get("nickname", "Unknown Nickname")
                     break
-        except Exception as e:
-            logger.debug(f"Failed to get bot {bot_id} info using other bots: {e}")
+                except Exception:
+                    continue
+    except Exception as e:
+        logger.debug(f"Failed to get nickname for bot {bot_id}: {e}")
+
+    return nickname
+
+
+@driver.on_bot_disconnect
+async def handle_bot_disconnect(bot: Bot) -> None:
+    bot_id: int = int(bot.self_id)
+    if bot_id in offline_bots and "source" in offline_bots[bot_id]:
+        # 已经处理过了，直接返回
+        return
+
+    nickname: str = await get_bot_nickname(bot_id)
 
     offline_bots[bot_id] = {
         "nickname": nickname,
         "offline_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "source": "disconnect_event",
     }
 
     job_id: str = f"bot_status_check_{bot_id}"
@@ -122,7 +140,6 @@ async def handle_bot_disconnect(bot: Bot) -> None:
         args=[
             bot_id,
             nickname,
-            bot.adapter.get_name() if hasattr(bot.adapter, "get_name") else "Unknown Adapter",
         ],
         misfire_grace_time=60,
         coalesce=True,
@@ -132,20 +149,77 @@ async def handle_bot_disconnect(bot: Bot) -> None:
     )
 
 
-async def check_bot_still_offline(bot_id: int, nickname: str, adapter_name: str) -> None:
-    """检查Bot是否真的离线"""
+@offline_notice.handle()
+async def handle_bot_offline_events(event: NoticeEvent):
+    """协议端离线事件"""
+    bot_id = 0
+    offline_message = ""
+    source = ""
+
+    if event.notice_type == "bot_offline":  # NapCat
+        bot_id = event.user_id
+        offline_message = getattr(event, "message", "")
+        source = "napcat_event"
+        logger.warning(f"NapCat Bot {bot_id} offline: {offline_message}")
+
+    elif hasattr(event, "sub_type") and event.sub_type == "BotOfflineEvent":  # Lagrange
+        bot_id = getattr(event, "self_id", getattr(event, "user_id", 0))
+        offline_message = "Bot Offline"
+        source = "lagrange_event"
+        logger.warning(f"Lagrange Bot {bot_id} offline")
+
+    if bot_id and source:
+        # 先尝试获取昵称，如果获取不到再检查offline_bots
+        try:
+            nickname = await get_bot_nickname(bot_id)
+        except Exception:
+            # 如果无法获取昵称，检查offline_bots中是否已有信息
+            if bot_id in offline_bots and "nickname" in offline_bots[bot_id]:
+                nickname = offline_bots[bot_id]["nickname"]
+            else:
+                nickname = "Unknown Nickname"
+
+        # 标记离线事件防止重复处理
+        offline_bots[bot_id] = {
+            "nickname": nickname,
+            "offline_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "source": source,
+        }
+
+        # 发送离线通知
+        await notify_bot_offline(bot_id, nickname, offline_message)
+
+
+async def check_bot_still_offline(bot_id: int, nickname: str) -> None:
+    """检查牛牛是否真的离线"""
     bots = get_bots()
     if str(bot_id) not in bots:
         logger.warning(f"Bot {bot_id} offline, sending notification")
-        offline_bots[bot_id]["offline_time"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        await notify_bot_offline(bot_id, nickname, adapter_name)
-    else:
+        # 更新离线时间
         if bot_id in offline_bots:
+            offline_bots[bot_id]["offline_time"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        else:
+            # 如果不在离线列表中，则添加进去
+            offline_bots[bot_id] = {
+                "nickname": nickname,
+                "offline_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "source": "checked_offline",
+            }
+        await notify_bot_offline(bot_id, nickname)
+    else:
+        # 牛牛实际上在线，从离线列表中删除
+        if (
+            bot_id in offline_bots
+            and "source" in offline_bots[bot_id]
+            and offline_bots[bot_id]["source"] == "checked_offline"
+        ):
             del offline_bots[bot_id]
+        elif bot_id in offline_bots and "source" not in offline_bots[bot_id]:
+            pass
 
 
 async def get_bot_admin_emails(bot_id: int) -> list[str]:
-    """获取Bot的admins邮箱列表"""
+    """获取牛牛的admins邮箱列表"""
     emails: list[str] = []
 
     try:
@@ -202,18 +276,27 @@ Bot ID: {bot.self_id}
         await test_mail_cmd.finish("测试邮件发送成功！")
 
 
-async def notify_bot_offline(bot_id: int, nickname: str, adapter_name: str = "Unknown Adapter") -> None:
+async def notify_bot_offline(bot_id: int, nickname: str, offline_reason: str = "") -> None:
     """通知Bot离线"""
+
     # 获取admin邮箱列表
     admin_emails: list[str] = await get_bot_admin_emails(bot_id)
 
     # 发送邮件通知
     if mail_config.check_params():
-        title: str = f"[牛牛不见啦] Bot {bot_id} is Offline"
+        title: str = f"[牛牛不见啦] {nickname} 已离线 "
+
+        reason_info = ""
+        if offline_reason:
+            reason_info = f"离线原因: {offline_reason}"
+
         content: str = f"""
-掉线通知
-你的牛牛：{nickname}，账号：{bot_id}掉线啦，快去看看怎么回事吧
+{reason_info}
+
+牛牛昵称：{nickname}
+牛牛账号：{bot_id}
 掉线时间: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+
 
         """.strip()
 
@@ -247,70 +330,60 @@ async def notify_bot_offline(bot_id: int, nickname: str, adapter_name: str = "Un
 
 @bot_status_cmd.handle()
 async def handle_bot_status(bot: Bot, event: MessageEvent) -> None:
-    """处理Bot状态查询命令"""
+    """处理状态查询命令"""
     if isinstance(event, GroupMessageEvent):
         config = GroupConfig(group_id=event.group_id, cooldown=10)
         if not await config.is_cooldown(STATUS_COOLDOWN_KEY):
             return
         await config.refresh_cooldown(STATUS_COOLDOWN_KEY)
 
+    # 获取当前在线的牛牛
     current_bots = get_bots()
 
-    # 显示在线Bot
-    online_info: str = ""
-    online_count: int = len(block_config.bots) if block_config.bots else 0
-    if block_config.bots:
-        bot_info_list: list[str] = []
-        for bot_id in block_config.bots:
-            if str(bot_id) in current_bots:
-                nickname: str = "Unknown Nickname"
-                try:
-                    info = await bot.call_api("get_stranger_info", user_id=bot_id)
-                    nickname = info.get("nickname", "Unknown Nickname")
-                except Exception:
-                    try:
-                        for bot_instance in current_bots.values():
-                            if str(bot_id) != bot_instance.self_id:
-                                info = await bot_instance.call_api("get_stranger_info", user_id=bot_id)
-                                nickname = info.get("nickname", "Unknown Nickname")
-                                break
-                    except Exception:
-                        pass
-                bot_info_list.append(f"{nickname} ({bot_id})")
+    all_bot_ids = set(block_config.bots) if block_config.bots else set()
+
+    if not all_bot_ids:
+        all_bot_ids.update(int(bot_id) for bot_id in current_bots.keys())
+
+    all_bot_ids.update(offline_bots.keys())
+
+    online_bots: dict[int, str] = {}
+    offline_bots_filtered: dict[int, str] = {}
+
+    for bot_id in all_bot_ids:
+        if str(bot_id) in current_bots:
+            nickname: str = await get_bot_nickname(bot_id, current_bots)
+            online_bots[bot_id] = nickname
+        else:
+            # 从offline_bots中查找昵称信息
+            if bot_id in offline_bots and "nickname" in offline_bots[bot_id]:
+                nickname = offline_bots[bot_id]["nickname"]
             else:
-                bot_info_list.append(f"Unknown Nickname ({bot_id})")
+                nickname = await get_bot_nickname(bot_id)
+                # 更新offline_bots中的昵称信息
+                if bot_id in offline_bots:
+                    offline_bots[bot_id]["nickname"] = nickname
+            offline_bots_filtered[bot_id] = nickname
 
-        online_info = f"当前在线的牛牛 (Total: {online_count}):\n" + "\n".join(bot_info_list)
+    # 显示在线牛牛
+    online_info: str = ""
+    online_count: int = len(online_bots)
+    if online_bots:
+        bot_info_list: list[str] = [f"{nickname} ({bot_id})" for bot_id, nickname in online_bots.items()]
+        online_info = f"在线的牛牛 (Total: {online_count}):\n" + "\n".join(bot_info_list)
     else:
-        online_info = "No bots are currently online"
+        online_info = ""
 
+    # 显示离线牛牛
     offline_info: str = ""
-    offline_count: int = len(offline_bots) if offline_bots else 0
-    if offline_bots:
-        offline_list: list[str] = []
-        for bot_id, info in offline_bots.items():
-            nickname = info["nickname"]
-            if nickname == "Unknown" or nickname == "Unknown Nickname":
-                # 如果之前是Unknown，尝试重新获取
-                try:
-                    for bot_instance in current_bots.values():
-                        if str(bot_id) != bot_instance.self_id:
-                            new_info = await bot_instance.call_api("get_stranger_info", user_id=bot_id)
-                            nickname = new_info.get("nickname", "Unknown Nickname")
-                            # 更新offline_bots中的昵称
-                            offline_bots[bot_id]["nickname"] = nickname
-                            break
-                except Exception:
-                    pass
-
-            offline_list.append(f"{nickname} ({bot_id})")
+    offline_count: int = len(offline_bots_filtered)
+    if offline_bots_filtered:
+        offline_list: list[str] = [f"{nickname} ({bot_id})" for bot_id, nickname in offline_bots_filtered.items()]
         offline_info = f"\n\n离线的牛牛 (Total: {offline_count}):\n" + "\n".join(offline_list)
 
     if offline_info:
         message: str = online_info + offline_info
-    elif online_info:
-        message = online_info
     else:
-        message = "No bots are currently online or offline"
+        message = online_info
 
     await bot_status_cmd.finish(message)
