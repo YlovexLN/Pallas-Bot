@@ -33,7 +33,7 @@ async def send_mail(title: str, content: str, mail_config: MailConfig):
     """发送邮件通知"""
     # 构造邮件内容
     message = MIMEMultipart("alternative")
-    message["Subject"] = Header(title, "utf-8")
+    message["Subject"] = Header(title, "utf-8").encode()
     message["From"] = mail_config.user
     message["To"] = mail_config.notice_email
     message.attach(MIMEText(content))
