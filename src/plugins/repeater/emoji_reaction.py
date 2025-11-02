@@ -305,7 +305,6 @@ def _check_reaction_event(event: NoticeEvent) -> bool:
     if event.notice_type == "reaction" and event.sub_type == "add":
         return getattr(event, "operator_id", None) != getattr(event, "self_id", None)
 
-    # NapCat只能支持别人贴Bot
     if event.notice_type == "group_msg_emoji_like":
         operator_id = getattr(event, "user_id", None)
         self_id = getattr(event, "self_id", None)
