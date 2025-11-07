@@ -115,6 +115,13 @@ async def check_bot_still_offline(bot_id: int, nickname: str) -> None:
                 "offline_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 "source": "checked_offline",
             }
+        # 发送离线通知
+        try:
+            from .mail_notifier import notify_bot_offline
+
+            await notify_bot_offline(bot_id, nickname)
+        except Exception as e:
+            logger.error(f"Failed to send offline notification for bot {bot_id}: {e}")
     else:
         # 牛牛实际上在线，从离线列表中删除
         if (
