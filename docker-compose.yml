@@ -21,3 +21,4 @@ services:
       - ./data/bilichat/cache:/root/.cache/nonebot2/nonebot_plugin_bilichat
       - ./data/bilichat/local:/root/.local/share/nonebot2/nonebot_plugin_bilichat
       - ./ms-playwright:/root/.cache/ms-playwright
+

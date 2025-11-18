@@ -1,7 +1,10 @@
 import re
 
+import httpx
 from nonebot import get_plugin_config, on_command
 from nonebot.adapters.onebot.v11 import MessageEvent, PrivateMessageEvent
+from nonebot.exception import FinishedException
+from nonebot.log import logger
 from nonebot.params import ArgStr
 from nonebot.permission import SUPERUSER
 from nonebot.typing import T_State
@@ -60,11 +63,10 @@ async def got_phone(event: MessageEvent, state: T_State, phone: str = ArgStr()):
         if response and response.json().get("code", 0) == 200:
             await ncm_login_cmd.send("验证码已发送，请查收短信。")
         else:
-            await ncm_login_cmd.send("验证码发送失败，但仍可尝试输入验证码进行登录。")
+            await ncm_login_cmd.send("验证码发送失败")
 
     except Exception:
-        await ncm_login_cmd.send("验证码发送失败，但仍可尝试输入验证码进行登录。")  # 强硬一点塞进去（
-
+        await ncm_login_cmd.send("验证码发送失败")
     state["need_captcha"] = True
 
 
@@ -107,8 +109,15 @@ async def handle_logout(event: MessageEvent):
             await ncm_logout_cmd.finish("已成功退出网易云音乐账号。")
         else:
             await ncm_logout_cmd.finish("登出失败，请稍后重试。")
-    except Exception:
-        await ncm_logout_cmd.finish("登出过程中出现错误，请稍后重试。")
+    except FinishedException:
+        raise
+    except httpx.TimeoutException:
+        await ncm_logout_cmd.finish("登出请求超时，请稍后重试。")
+    except httpx.ConnectError:
+        await ncm_logout_cmd.finish("无法连接到服务器，请检查网络或服务器状态。")
+    except Exception as e:
+        logger.error(f"网易云登出时发生未预期错误: {e}", exc_info=True)
+        await ncm_logout_cmd.finish(f"登出过程中出现错误: {str(e)}，请稍后重试。")
 
 
 async def is_ncm_logged_in():
