@@ -36,6 +36,10 @@ __plugin_meta__ = PluginMetadata(
     - 发送"牛牛救一下"可以解除所有禁言
     - 发送"牛牛救一下@用户"可以解除指定用户的禁言
     - 牛牛救一下有概率炸膛，喝酒后会引发特别的效果...
+4. 补枪功能：
+    - 发送"牛牛补一枪"可以让所有禁言延长
+    - 发送"牛牛补一枪@用户"可以延长指定用户的禁言
+    - 牛牛补一枪也有概率炸膛，喝酒后会引发特别的效果...
     """.strip(),
     type="application",
     homepage="https://github.com/PallasBot",
@@ -70,6 +74,13 @@ __plugin_meta__ = PluginMetadata(
                 "trigger_condition": "牛牛救一下",
                 "brief_des": "解除被禁言的用户",
                 "detail_des": "解除被禁言的用户。发送'牛牛救一下'解除所有禁言，发送'牛牛救一下@用户'解除指定用户的禁言。在牛牛喝酒以后，牛牛救一下有概率把请求的人处决了()",  # noqa: E501
+            },
+            {
+                "func": "补枪功能",
+                "trigger_method": "on_message",
+                "trigger_condition": "牛牛补一枪",
+                "brief_des": "延长被禁言用户的禁言时间",
+                "detail_des": "延长被禁言用户的禁言时间。发送'牛牛补一枪'可以让所有禁言延长，发送'牛牛补一枪@用户'可以延长指定用户的禁言。在牛牛喝酒以后，牛牛补一枪有概率把请求的人处决了()",  # noqa: E501
             },
         ],
         "menu_template": "default",
@@ -540,25 +551,26 @@ async def _(bot: Bot, event: GroupMessageEvent):
         else:
             await rescue_msg.finish("此刻并无需要拯救之人，和平仍在延续。")
 
-async def is_Judgment_msg(event: GroupMessageEvent) -> bool:
+
+async def is_judgment_msg(event: GroupMessageEvent) -> bool:
     if event.get_plaintext().strip().startswith("牛牛补一枪"):
         return role_cache[event.self_id][event.group_id] in {"admin", "owner"}
     return False
 
 
-Judgment_msg = on_message(
+judgment_msg = on_message(
     priority=5,
     block=True,
-    rule=Rule(is_Judgment_msg),
+    rule=Rule(is_judgment_msg),
     permission=permission.GROUP,
 )
 
 
-@Judgment_msg.handle()
+@judgment_msg.handle()
 async def _(bot: Bot, event: GroupMessageEvent):
     current_group_id = event.group_id
     if random.random() < 0.125:
-        await Judgment_msg.finish("我的手中的这把武器，找了无数工匠都难以修缮如新。不......不该如此......")
+        await judgment_msg.finish("我的手中的这把武器，找了无数工匠都难以修缮如新。不......不该如此......")
 
     if await BotConfig(event.self_id, event.group_id).drunkenness() > 0 and random.random() < 0.3:
         mode = await GroupConfig(event.group_id).roulette_mode()
@@ -583,9 +595,9 @@ async def _(bot: Bot, event: GroupMessageEvent):
                         "group_id": event.group_id,
                     },
                 )
-                await Judgment_msg.finish("呃......咳嗯，博士，这个叫“二踢脚”的可以在我头上放吗...")
+                await judgment_msg.finish("呃......咳嗯，博士，这个叫“二踢脚”的可以在我头上放吗...")
             else:
-                await Judgment_msg.finish("呃......咳嗯，博士，这个叫“二踢脚”的是在他头上放吗...")
+                await judgment_msg.finish("呃......咳嗯，博士，这个叫“二踢脚”的是在他头上放吗...")
         else:
             await bot.call_api(
                 "set_group_ban",
@@ -596,7 +608,7 @@ async def _(bot: Bot, event: GroupMessageEvent):
                 },
             )
             ban_players[event.group_id].append(event.user_id)
-            await Judgment_msg.finish("呃......咳嗯，博士，这个叫“二踢脚”的是在他头上放吗...")
+            await judgment_msg.finish("呃......咳嗯，博士，这个叫“二踢脚”的是在他头上放吗...")
         return
 
     at_list = [
@@ -605,7 +617,7 @@ async def _(bot: Bot, event: GroupMessageEvent):
     target_user_ids = list(map(int, at_list))
 
     if target_user_ids:
-        Judgmentd_users = []
+        judgmentd_users = []
 
         for target_user_id in target_user_ids:
             try:
@@ -617,7 +629,7 @@ async def _(bot: Bot, event: GroupMessageEvent):
                         "duration":  random.randint(30, 80) * 60,
                     },
                 )
-                Judgmentd_users.append(target_user_id)
+                judgmentd_users.append(target_user_id)
 
                 if current_group_id in ban_players and target_user_id in ban_players[current_group_id]:
                     ban_players[current_group_id].remove(target_user_id)
@@ -626,15 +638,15 @@ async def _(bot: Bot, event: GroupMessageEvent):
 
         reply_segments = []
 
-        if Judgmentd_users:
+        if judgmentd_users:
             reply_segments.append(MessageSegment.text("	哭嚎吧，"))
-            reply_segments.extend(MessageSegment.at(user_id) for user_id in Judgmentd_users)
+            reply_segments.extend(MessageSegment.at(user_id) for user_id in judgmentd_users)
             reply_segments.append(MessageSegment.text(",为你们不堪一击的信念。"))
 
-        await Judgment_msg.finish(MessageSegment.text("").join(reply_segments))
+        await judgment_msg.finish(MessageSegment.text("").join(reply_segments))
 
     else:
-        Judgmentd_users = []
+        judgmentd_users = []
         if current_group_id in ban_players:
             for user_id in list(ban_players[current_group_id]):
                 try:
@@ -646,13 +658,13 @@ async def _(bot: Bot, event: GroupMessageEvent):
                             "duration":  random.randint(20, 40) * 60,
                         },
                     )
-                    Judgmentd_users.append(user_id)
+                    judgmentd_users.append(user_id)
                 except Exception as e:
                     logger.error(e)
 
             ban_players[current_group_id] = []
 
-        if Judgmentd_users:
-            await Judgment_msg.finish("是吗，我们做到了吗......我现在，正体会至高的荣誉和幸福。")
+        if judgmentd_users:
+            await judgment_msg.finish("是吗，我们做到了吗......我现在，正体会至高的荣誉和幸福。")
         else:
-            await Judgment_msg.finish("转身吧，勇士们。我们已经获得了完美的胜利，现在是该回去享受庆祝的盛典了。")
+            await judgment_msg.finish("转身吧，勇士们。我们已经获得了完美的胜利，现在是该回去享受庆祝的盛典了。")
