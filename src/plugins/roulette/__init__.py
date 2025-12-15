@@ -539,3 +539,120 @@ async def _(bot: Bot, event: GroupMessageEvent):
             await rescue_msg.finish("命运的轮盘再次转动，所有的沉默都被打破。")
         else:
             await rescue_msg.finish("此刻并无需要拯救之人，和平仍在延续。")
+
+async def is_Judgment_msg(event: GroupMessageEvent) -> bool:
+    if event.get_plaintext().strip().startswith("牛牛补一枪"):
+        return role_cache[event.self_id][event.group_id] in {"admin", "owner"}
+    return False
+
+
+Judgment_msg = on_message(
+    priority=5,
+    block=True,
+    rule=Rule(is_Judgment_msg),
+    permission=permission.GROUP,
+)
+
+
+@Judgment_msg.handle()
+async def _(bot: Bot, event: GroupMessageEvent):
+    current_group_id = event.group_id
+    if random.random() < 0.125:
+        await Judgment_msg.finish("我的手中的这把武器，找了无数工匠都难以修缮如新。不......不该如此......")
+
+    if await BotConfig(event.self_id, event.group_id).drunkenness() > 0 and random.random() < 0.3:
+        mode = await GroupConfig(event.group_id).roulette_mode()
+        if mode == 0:
+            user_info = await bot.call_api(
+                "get_group_member_info",
+                **{
+                    "user_id": event.user_id,
+                    "group_id": event.group_id,
+                },
+            )
+            user_role = user_info["role"]
+
+            if user_role != "owner" and not (
+                user_role == "admin" and role_cache[event.self_id][event.group_id] != "owner"
+            ):
+                kicked_users[event.group_id].add(event.user_id)
+                await bot.call_api(
+                    "set_group_kick",
+                    **{
+                        "user_id": event.user_id,
+                        "group_id": event.group_id,
+                    },
+                )
+                await Judgment_msg.finish("呃......咳嗯，博士，这个叫“二踢脚”的可以在我头上放吗...")
+            else:
+                await Judgment_msg.finish("呃......咳嗯，博士，这个叫“二踢脚”的是在他头上放吗...")
+        else:
+            await bot.call_api(
+                "set_group_ban",
+                **{
+                    "user_id": event.user_id,
+                    "group_id": event.group_id,
+                    "duration": random.randint(25, 120) * 60,
+                },
+            )
+            ban_players[event.group_id].append(event.user_id)
+            await Judgment_msg.finish("呃......咳嗯，博士，这个叫“二踢脚”的是在他头上放吗...")
+        return
+
+    at_list = [
+        msg_seg.data["qq"] for msg_seg in event.message if msg_seg.type == "at" and msg_seg.data.get("qq") != "all"
+    ]
+    target_user_ids = list(map(int, at_list))
+
+    if target_user_ids:
+        Judgmentd_users = []
+
+        for target_user_id in target_user_ids:
+            try:
+                await bot.call_api(
+                    "set_group_ban",
+                    **{
+                        "user_id": target_user_id,
+                        "group_id": current_group_id,
+                        "duration":  random.randint(30, 80) * 60,
+                    },
+                )
+                Judgmentd_users.append(target_user_id)
+
+                if current_group_id in ban_players and target_user_id in ban_players[current_group_id]:
+                    ban_players[current_group_id].remove(target_user_id)
+            except Exception as e:
+                logger.error(e)
+
+        reply_segments = []
+
+        if Judgmentd_users:
+            reply_segments.append(MessageSegment.text("	哭嚎吧，"))
+            reply_segments.extend(MessageSegment.at(user_id) for user_id in Judgmentd_users)
+            reply_segments.append(MessageSegment.text(",为你们不堪一击的信念。"))
+
+        await Judgment_msg.finish(MessageSegment.text("").join(reply_segments))
+
+    else:
+        Judgmentd_users = []
+        if current_group_id in ban_players:
+            for user_id in list(ban_players[current_group_id]):
+                try:
+                    await bot.call_api(
+                        "set_group_ban",
+                        **{
+                            "user_id": user_id,
+                            "group_id": current_group_id,
+                            "duration":  random.randint(20, 40) * 60,
+                        },
+                    )
+                    Judgmentd_users.append(user_id)
+                except Exception as e:
+                    logger.error(e)
+
+            ban_players[current_group_id] = []
+
+        if Judgmentd_users:
+            await Judgment_msg.finish("是吗，我们做到了吗......我现在，正体会至高的荣誉和幸福。")
+        else:
+            await Judgment_msg.finish("转身吧，勇士们。我们已经获得了完美的胜利，现在是该回去享受庆祝的盛典了。")
