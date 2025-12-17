@@ -626,7 +626,7 @@ async def _(bot: Bot, event: GroupMessageEvent):
                     **{
                         "user_id": target_user_id,
                         "group_id": current_group_id,
-                        "duration":  random.randint(30, 80) * 60,
+                        "duration": random.randint(30, 80) * 60,
                     },
                 )
                 judgmentd_users.append(target_user_id)
