@@ -46,8 +46,14 @@ name = "pypi"
 url = "https://pypi.org/simple"
 
 [tool.nonebot]
-adapters = [
-    { name = "OneBot V11", module_name = "nonebot.adapters.onebot.v11" }
-]
-plugins = ["nonebot_plugin_apscheduler"]
 plugin_dirs = ["src/plugins"]
+builtin_plugins = []
+
+[tool.nonebot.plugins]
+"@local" = []
+nonebot-plugin-apscheduler = ["nonebot_plugin_apscheduler"]
+
+
+[tool.nonebot.adapters]
+"@local" = []
+nonebot-adapter-onebot = [{name = "OneBot V11", module_name = "nonebot.adapters.onebot.v11"}]
