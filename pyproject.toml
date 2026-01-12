@@ -57,7 +57,7 @@ builtin_plugins = []
 nonebot-plugin-apscheduler = ["nonebot_plugin_apscheduler"]
 nonebot-plugin-alconna = ["nonebot_plugin_alconna"]
 nonebot-plugin-quickreply = ["nonebot_plugin_quickreply"]
-nonebot-plugin-bilichat = ["nonebot_plugin_bili_helper"]
+nonebot-plugin-bili-helper = ["nonebot_plugin_bili_helper"]
 nonebot-plugin-emojilike = ["nonebot_plugin_emojilike"]
 
 
