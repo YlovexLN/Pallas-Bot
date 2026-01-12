@@ -60,7 +60,7 @@ nonebot-plugin-alconna = ["nonebot_plugin_alconna"]
 nonebot-plugin-quickreply = ["nonebot_plugin_quickreply"]
 nonebot-plugin-bili-helper = ["nonebot_plugin_bili_helper"]
 nonebot-plugin-emojilike = ["nonebot_plugin_emojilike"]
-nonebot-plugin-orm = ["nonebot_plugin_orm"]
+nonebot-plugin-orm[default] = ["nonebot_plugin_orm[default]"]
 
 
 [tool.nonebot.adapters]
