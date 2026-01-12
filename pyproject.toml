@@ -22,7 +22,8 @@ dependencies = [
     "pypinyin>=0.55.0",
     "python-multipart>=0.0.20",
     "python-ulid>=3.1.0",
-    "tenacity>=9.1.2"
+    "tenacity>=9.1.2",
+    "nonebot-plugin-quickreply>=0.1.15"
 ]
 
 [project.optional-dependencies]
@@ -52,6 +53,7 @@ builtin_plugins = []
 [tool.nonebot.plugins]
 "@local" = []
 nonebot-plugin-apscheduler = ["nonebot_plugin_apscheduler"]
+nonebot-plugin-quickreply = ["nonebot_plugin_quickreply"]
 
 
 [tool.nonebot.adapters]
