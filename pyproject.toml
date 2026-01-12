@@ -54,9 +54,9 @@ builtin_plugins = []
 
 [tool.nonebot.plugins]
 "@local" = []
-nonebot-plugin-apscheduler = ["nonebot_plugin_apscheduler"]
+nonebot_plugin_apscheduler = ["nonebot_plugin_apscheduler"]
 nonebot_plugin_alconna = ["nonebot_plugin_alconna"]
-nonebot_plugin_quick_reply = ["nonebot_plugin_quick_reply"]
+nonebot_plugin_quickreply = ["nonebot_plugin_quickreply"]
 nonebot_plugin_bilichat = ["nonebot_plugin_bili_helper"]
 nonebot_plugin_emojilike = ["nonebot_plugin_emojilike"]
 
