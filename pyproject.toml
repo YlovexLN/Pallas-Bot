@@ -23,6 +23,7 @@ dependencies = [
     "nonebot-plugin-quickreply>=0.1.15",
     "nonebot-plugin-bili-helper>=0.9.3",
     "nonebot-plugin-emojilike>=0.2.4",
+    "nonebot-plugin-orm>=0.8.3",
     "python-multipart>=0.0.20",
     "python-ulid>=3.1.0",
     "tenacity>=9.1.2",
@@ -59,6 +60,7 @@ nonebot_plugin_alconna = ["nonebot_plugin_alconna"]
 nonebot_plugin_quickreply = ["nonebot_plugin_quickreply"]
 nonebot_plugin_bilichat = ["nonebot_plugin_bili_helper"]
 nonebot_plugin_emojilike = ["nonebot_plugin_emojilike"]
+nonebot_plugin_orm = ["nonebot_plugin_orm"]
 
 
 [tool.nonebot.adapters]
