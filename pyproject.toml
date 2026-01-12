@@ -21,6 +21,7 @@ dependencies = [
     "pyncm-async>=1.8.2",
     "pypinyin>=0.55.0",
     "nonebot-plugin-quickreply>=0.1.15",
+    "nonebot-plugin-bili-helper>=0.9.3",
     "nonebot-plugin-emojilike>=0.2.4",
     "python-multipart>=0.0.20",
     "python-ulid>=3.1.0",
@@ -54,9 +55,9 @@ builtin_plugins = []
 [tool.nonebot.plugins]
 "@local" = []
 nonebot-plugin-apscheduler = ["nonebot_plugin_apscheduler"]
-nonebot-plugin-alconna = ["nonebot_plugin_alconna"]
 nonebot-plugin-quickreply = ["nonebot_plugin_quickreply"]
 nonebot-plugin-emojilike = ["nonebot_plugin_emojilike"]
+nonebot-plugin-bili-helper = ["nonebot_plugin_bili_helper"]
 
 
 [tool.nonebot.adapters]
