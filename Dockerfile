@@ -12,7 +12,7 @@ RUN apt-get update && \
 
 COPY pyproject.toml ./
 
-RUN uv pip install --system ".[perf]" --no-cache-dir && \
+RUN uv pip install --system ".[perf,pg]" --no-cache-dir && \
     apt-get purge -y build-essential && \
     apt-get autoremove -y && \
     rm -rf /root/.cache/pip
